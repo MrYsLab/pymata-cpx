@@ -36,6 +36,8 @@ Button A released: pixel 8 = off
 Slide switch right: pixel 6 = blue, pixel 3 = off
 Slide switch left:  pixel 3 = blue, pixel 6 = off
 
+On any detected change, the board LED will be briefly flashed.
+
 All switches share a common callback function.
 
 """
@@ -109,7 +111,12 @@ def buttons_callback(data):
     else:
         print('Unknown switch id: ', the_switch)
 
+    # flash the board LED
+    p.cpx_board_light_on()
+    time.sleep(.2)
+    p.cpx_board_light_off()
 
+    
 # create a cpx instance
 p = PyMataCpx()
 
