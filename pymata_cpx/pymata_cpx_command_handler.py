@@ -98,15 +98,6 @@ class PyMataCpxCommandHandler(threading.Thread):
 
         self.analog_response_table = []
 
-        # this list contains the results of the last pin query
-        self.last_pin_query_results = []
-
-        # this stores the results of a capability request
-        self.capability_query_results = []
-
-        # this stores the results of an analog mapping query
-        self.analog_mapping_query_results = []
-
         self.initialize_response_tables()
 
         threading.Thread.__init__(self)
@@ -301,61 +292,6 @@ class PyMataCpxCommandHandler(threading.Thread):
             string_to_print.append(chr(i))
         print("".join(string_to_print))
 
-    def i2c_reply(self, data):
-        """
-        This method receives replies to i2c_read requests. It stores the data for each i2c device
-        address in a dictionary called i2c_map. The data is retrieved via a call to i2c_get_read_data()
-        in pymata.py
-        It a callback was specified in pymata.i2c_read, the raw data is sent through the callback
-
-        :param data: raw data returned from i2c device
-        """
-
-        reply_data = []
-        address = (data[0] & 0x7f) + (data[1] << 7)
-        register = data[2] & 0x7f + data[3] << 7
-        reply_data.append(register)
-        for i in range(4, len(data), 2):
-            data_item = (data[i] & 0x7f) + (data[i + 1] << 7)
-            reply_data.append(data_item)
-        # retrieve the data entry for this address from the i2c map
-        if address in self.i2c_map:
-            i2c_data = self.i2c_map.get(address, None)
-
-            i2c_data[1] = reply_data
-            self.i2c_map[address] = i2c_data
-            # is there a call back for this entry?
-            # if yes, return a list of bytes through the callback
-            if i2c_data[0] is not None:
-                i2c_data[0]([Constants.I2C, address, reply_data])
-
-    def capability_response(self, data):
-        """
-        This method handles a capability response message and stores the results to be retrieved
-        via get_capability_query_results() in pymata.py
-
-        :param data: raw capability data
-        """
-        self.capability_query_results = data
-
-    def pin_state_response(self, data):
-        """
-        This method handles a pin state response message and stores the results to be retrieved
-        via get_pin_state_query_results() in pymata.py
-
-        :param data:  raw pin state data
-        """
-        self.last_pin_query_results = data
-
-    def analog_mapping_response(self, data):
-        """
-        This method handles an analog mapping query response message and stores the results to be retrieved
-        via get_analog_mapping_request_results() in pymata.py
-
-        :param data: raw analog mapping data
-        """
-        self.analog_mapping_query_results = data
-
     def _therm_handler(self, data):
         """Callback invoked when the thermistor analog input has a new value.
         """
@@ -445,7 +381,7 @@ class PyMataCpxCommandHandler(threading.Thread):
                 self.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL](
                     [Constants.ANALOG, pin, response, value])
 
-            time.sleep(.01)
+            time.sleep(.001)
 
         elif command == Constants.CP_IMPL_VERS_REPLY:
             # Parse implementation version response.
@@ -524,8 +460,7 @@ class PyMataCpxCommandHandler(threading.Thread):
         self.command_dispatch.update({Constants.ANALOG_MESSAGE: [self.analog_message, 2]})
         self.command_dispatch.update({Constants.DIGITAL_MESSAGE: [self.digital_message, 2]})
         self.command_dispatch.update({Constants.STRING_DATA: [self._string_data, 2]})
-        self.command_dispatch.update({Constants.I2C_REPLY: [self.i2c_reply, 2]})
-        self.command_dispatch.update({Constants.PIN_STATE_RESPONSE: [self.pin_state_response, 2]})
+        # self.command_dispatch.update({Constants.PIN_STATE_RESPONSE: [self.pin_state_response, 2]})
         self.command_dispatch.update({Constants.CP_COMMAND: [self.cp_response_handler, 2]})
 
         while not self.is_stopped():

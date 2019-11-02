@@ -106,7 +106,6 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <Adafruit_CircuitPlayground.h>
-#include <Ultrasonic.h>
 
 // Uncomment below to enable debug output.
 //#define DEBUG_MODE
@@ -149,9 +148,6 @@
 #define I2C_10BIT_ADDRESS_MODE_MASK B00100000
 #define I2C_MAX_QUERIES             8
 #define I2C_REGISTER_NOT_SPECIFIED  -1
-
-// maximum number of connected sonar devices
-#define MAX_SONARS 2
 
 // Circuit Playground Express configuration:
 #define CPLAY_SPEAKER           12  // Output connected to the speaker.
@@ -218,27 +214,7 @@
 /*==============================================================================
    GLOBAL VARIABLES
   ============================================================================*/
-// ultrasonic
-// Ping variables
-
-int numLoops = 0 ;
-int pingLoopCounter = 0 ;
-
-int numActiveSonars = 0 ; // number of sonars attached
-uint8_t sonarPinNumbers[MAX_SONARS] ;
-int nextSonar = 0 ; // index into sonars[] for next device
-
-// array to hold up to 6 instances of sonar devices
-Ultrasonic *sonars[MAX_SONARS] ;
-
-uint8_t sonarTriggerPin;
-uint8_t sonarEchoPin ;
-uint8_t currentSonar = 0;            // Keeps track of which sensor is active.
-
-uint8_t pingInterval = 33 ;  // Milliseconds between sensor pings (29ms is about the min to avoid
-// cross- sensor echo).
-byte sonarMSB, sonarLSB ;
-
+int touch_channel = 0;
 
 // Circuit playground globals:
 bool streamTap = false;
@@ -723,10 +699,6 @@ void setPinModeCallback(byte pin, int mode)
       }
       break;
 
-    case PIN_MODE_SONAR:
-      pinConfig[pin] = PIN_MODE_SONAR;
-      break ;
-
     default:
       Firmata.sendString("Unknown pin mode"); // TODO: put error msgs in EEPROM
   }
@@ -1026,8 +998,8 @@ void sendImplemenationVersionResponse() {
   // Construct a response data packet and send it.
   uint8_t data[4] = {0};
   data[0] = CP_IMPL_VERS_REPLY;
-  data[1] = 10;
-  data[2] = 26;
+  data[1] = 11;
+  data[2] = 02;
   data[3] = 19;
   // Send the response.
   Firmata.sendSysex(CP_COMMAND, 4, data);
@@ -1226,27 +1198,6 @@ void sysexCallback(byte command, byte argc, byte *argv)
         }
       }
       break;
-
-    case SONAR_CONFIG :
-      unsigned long timeout ;
-      if ( numActiveSonars < MAX_SONARS)
-      {
-        sonarTriggerPin = argv[0] ;
-        sonarEchoPin = argv[1] ;
-
-        timeout = argv[2] + (argv[3] << 7 ) ;
-        sonarPinNumbers[numActiveSonars] = sonarTriggerPin ;
-
-        setPinModeCallback(sonarTriggerPin, PIN_MODE_SONAR);
-        setPinModeCallback(sonarEchoPin, PIN_MODE_SONAR);
-        sonars[numActiveSonars] = new Ultrasonic(sonarTriggerPin, sonarEchoPin, timeout) ;
-
-        numActiveSonars++ ;
-      }
-      else {
-        Firmata.sendString("PING_CONFIG Error: Exceeded number of supported ping devices");
-      }
-      break ;
 
     case SAMPLING_INTERVAL:
       if (argc > 1) {
@@ -1575,36 +1526,16 @@ void loop()
       sendAccelResponse();
     }
     // Check if any cap touch inputs should be streamed to the firmata client.
-    for (int i = 0; i < CAP_COUNT; ++i) {
-      if (cap_state[i].streaming) {
-        sendCapResponse(cap_state[i].pin);
-      }
-    }
-    if ( pingLoopCounter++ > numLoops)
+
+    if (cap_state[touch_channel].streaming)
     {
-      pingLoopCounter = 0 ;
-      if (numActiveSonars)
-      {
-        unsigned int distance = sonars[nextSonar]->read();
-        currentSonar = nextSonar ;
-        if ( nextSonar++ >= numActiveSonars - 1)
-        {
-          nextSonar = 0 ;
-        }
-        sonarLSB = distance & 0x7f ;
-        sonarMSB = distance >> 7 & 0x7f ;
-
-        Firmata.write(START_SYSEX);
-        Firmata.write(SONAR_DATA) ;
-        Firmata.write(sonarPinNumbers[currentSonar]) ;
-        Firmata.write(sonarLSB) ;
-        Firmata.write(sonarMSB) ;
-        Firmata.write(END_SYSEX);
-
-      }
+      sendCapResponse(cap_state[touch_channel].pin);
     }
+    touch_channel++;
+    if (touch_channel >= CAP_COUNT){
+      touch_channel = 0;
+    }
+
   }
 
 }
-
-

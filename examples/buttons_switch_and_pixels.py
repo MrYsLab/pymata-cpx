@@ -116,7 +116,7 @@ def buttons_callback(data):
     time.sleep(.2)
     p.cpx_board_light_off()
 
-    
+
 # create a cpx instance
 p = PyMataCpx()
 
@@ -132,6 +132,13 @@ p.cpx_slide_switch_start(buttons_callback)
 p.cpx_pixel_set(6, 0, 0, 255)
 p.cpx_pixel_set(3, 0, 0, 0)
 p.cpx_pixels_show()
+
+print()
+print('Press Button A, Button B, Button A and B, or move the slide switch.')
+print('Each time you press a button or move the slide switch, the board LED will flash')
+print('and a neopixel will light indicating that button or slide switch')
+print('activation was processed and a message is printed to the console.')
+print()
 
 while True:
     # just kill time waiting for a switch change

@@ -177,18 +177,20 @@ class PyMataCpx(object):
         # set the angle
         self._pwm_write(pin, angle)
 
-    def cpx_button_a_start(self, callback):
+    def cpx_button_a_start(self, callback, debounce_time=.1):
 
         """
         Enable button and report state changes in the callback.
 
         :param callback
 
+        :param debounce_time: switch debounce time default is .1 seconds
+
         Parameters sent to callback:
 
         [Digital Pin Type: 32, Pin Number: 4, switch value: 1 if pressed zero if released.]
         """
-        self._cpx_start_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL, callback)
+        self._cpx_start_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL, callback, debounce_time)
 
 
     def cpx_button_a_stop(self):
@@ -197,10 +199,14 @@ class PyMataCpx(object):
         """
         self._cpx_stop_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL)
 
-    def cpx_button_b_start(self, callback):
+    def cpx_button_b_start(self, callback, debounce_time=.1):
 
         """
         Enable button and report state changes in the callback.
+
+        :param callback
+
+        :param debounce_time: switch debounce time default is .1 seconds
 
         Parameters sent to callback:
 
@@ -208,7 +214,7 @@ class PyMataCpx(object):
 
         """
         self._cpx_start_sensor(Constants.CPX_BUTTON_B,
-                               Constants.DIGITAL, callback)
+                               Constants.DIGITAL, callback, debounce_time)
 
     def cpx_button_b_stop(self):
         """
@@ -216,17 +222,21 @@ class PyMataCpx(object):
         """
         self._cpx_stop_sensor(Constants.CPX_BUTTON_B, Constants.DIGITAL)
 
-    def cpx_slide_switch_start(self, callback):
+    def cpx_slide_switch_start(self, callback, debounce_time=.1):
 
         """
         Enable button and report state changes in the callback
+
+        :param callback
+
+        :param debounce_time: switch debounce time default is .1 seconds
 
         Parameters sent to callback:
 
         [Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]
         """
         self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
-                               Constants.DIGITAL, callback)
+                               Constants.DIGITAL, callback, debounce_time)
 
     def cpx_slide_switch_stop(self):
         """
@@ -246,7 +256,7 @@ class PyMataCpx(object):
 
         :param callback:
         """
-        self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback)
+        self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)
 
     def cpx_light_sensor_stop(self):
         """
@@ -270,7 +280,7 @@ class PyMataCpx(object):
 
         """
         self._cpx_start_sensor(Constants.CPX_MICROPHONE,
-                               Constants.ANALOG, callback)
+                               Constants.ANALOG, callback, None)
 
     def cpx_microphone_stop(self):
         """
@@ -354,8 +364,8 @@ class PyMataCpx(object):
         :param input_pin: Ax where x 1 to 7
         """
 
-        assert input_pin in [0, 1, 2, 3, 6, 9, 10, 12], \
-            'Input pin must be a capacitive input (0,1,2,3,6,9,10,12)!'
+        assert input_pin in [1, 2, 3, 4, 5, 6, 7], \
+            'Input pin must be a capacitive input (1, 2, 3, 4, 5, 6, 7)!'
         pin = self.ad_pin_map[input_pin]['mapped_pin']
         # Construct a continuous cap read stop command and send it.
         self._command_handler.send_sysex(Constants.CP_COMMAND,
@@ -385,7 +395,7 @@ class PyMataCpx(object):
             self._set_pin_mode(0, Constants.INPUT,
                               Constants.ANALOG,
                               callback,
-                              self._command_handler._therm_handler)
+                              self._command_handler._therm_handler, None)
         except IndexError:
             raise
 
@@ -679,7 +689,7 @@ class PyMataCpx(object):
 
         :return: No return value
         """
-        self._command_handler.analog_response_table[pin] = self._command_handler.initial_response_table_entry
+        self._command_handler.analog_response_table[pin] = [None, None, 0, None, None, None]
 
 
         command = [Constants.REPORT_ANALOG + pin, Constants.REPORTING_DISABLE]
@@ -694,7 +704,7 @@ class PyMataCpx(object):
         :param pin: Pin and all pins for this port
         :return: No return value
         """
-        self._command_handler.digital_response_table[pin] = self._command_handler.initial_response_table_entry
+        self._command_handler.digital_response_table[pin] = [None, None, 0, None, None, None]
 
         port = pin // 8
         command = [Constants.REPORT_DIGITAL + port, Constants.REPORTING_DISABLE]
@@ -740,7 +750,7 @@ class PyMataCpx(object):
 
 
 
-    def _set_pin_mode(self, pin, mode, pin_type, cb_external=None, cb_internal=None):
+    def _set_pin_mode(self, pin, mode, pin_type, cb_external=None, cb_internal=None, debounce_time=None):
         """
         This method sets a pin to the desired pin mode for the pin_type.
         It automatically enables data reporting.
@@ -850,7 +860,7 @@ class PyMataCpx(object):
             pass
         sys.exit(0)
 
-    def _cpx_start_sensor(self, pin, pin_type, callback):
+    def _cpx_start_sensor(self, pin, pin_type, callback, debounce_time=None):
         """
         Start sensor streaming for dedicated sensors
         :param pin:
@@ -862,16 +872,16 @@ class PyMataCpx(object):
         if pin_type == Constants.DIGITAL:
             # get record for this pin
             the_record = self._command_handler.digital_response_table[pin]
-            if the_record[0] is None:
-                self._set_pin_mode(pin, Constants.INPUT, Constants.DIGITAL, callback, None)
+            if the_record[Constants.RESPONSE_TABLE_MODE] is None:
+                self._set_pin_mode(pin, Constants.INPUT, Constants.DIGITAL, callback, None, debounce_time)
 
             # self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
             #     callback
             self._enable_digital_reporting(pin)
         else:
             the_record = self._command_handler.analog_response_table[pin]
-            if the_record[0] is None:
-                self._set_pin_mode(pin, Constants.INPUT, Constants.ANALOG, callback, None)
+            if the_record[Constants.RESPONSE_TABLE_MODE] is None:
+                self._set_pin_mode(pin, Constants.INPUT, Constants.ANALOG, callback, None, None)
             # self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
             #     callback
             self._enable_analog_reporting(pin)

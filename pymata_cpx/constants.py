@@ -141,7 +141,7 @@ class Constants:
     ACCEL_8G = 2
     ACCEL_16G = 3
 
-    CAP_THRESHOLD = 55667072  # Threshold for considering a cap touch input pressed.
+    CAP_THRESHOLD = 33000000  # Threshold for considering a cap touch input pressed.
     # If the cap touch value is above this value it is
     # considered touched.
 
@@ -155,6 +155,7 @@ class Constants:
     RESPONSE_TABLE_PREV_DATA_VALUE = 2
     RESPONSE_TABLE_CALLBACK_EXTERNAL = 3
     RESPONSE_TABLE_CALLBACK_INTERNAL = 4
+    RESPONSE_TABLE_DEBOUNCE_TIME = 5
 
     ACCEL_USAGE_AVAILABLE = 0  # accel not in use
     ACCEL_USAGE_ACCEL = 1  # accel is being used as an accelerometer

@@ -16,16 +16,17 @@
 """
 
 from pymata_cpx.pymata_cpx import PyMataCpx
-import math
 import time
+
 
 class LightMeter:
     """
-    This program is implemented as a class. Using the light sensor,
+    Using the light sensor, select and
     illuminate pixels based on the current light sensor reading.
     As the light sensor values increase, the pixels will be lit
     in a clockwise fashion.
     """
+
     def __init__(self):
         # a dictionary of pixels as the key and
         # associated rgb color values
@@ -39,7 +40,7 @@ class LightMeter:
             6: [0, 0, 233],
             7: [153, 0, 153],
             8: [255, 0, 255],
-            9: [0, 0, 0],
+            9: [255, 255, 255],
         }
 
         # save the previous pixel number that was illuminated
@@ -60,6 +61,11 @@ class LightMeter:
         # enable the light sensor and provide a callback.
         # Note: the callback is a member of this class.
         self.p.cpx_light_sensor_start(self.light_sensor_callback)
+
+        print()
+        print('Move a light source near the light sensor, and depending upon the')
+        print('intensity of the light, an associated pixel will be illuminated.')
+        print()
 
         while True:
             # just kill time waiting for a light data to arrive
@@ -119,6 +125,7 @@ class LightMeter:
             # control the pixels
             self.p.cpx_pixels_show()
             self.last_pixel_used = pixel
+
 
 # start the program by instantiating the class
 LightMeter()
