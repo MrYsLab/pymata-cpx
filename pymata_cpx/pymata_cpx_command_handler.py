@@ -61,27 +61,6 @@ class PyMataCpxCommandHandler(threading.Thread):
     # firmata version information - saved as a list - [major, minor]
     firmata_version = [None, None, None]
 
-    # a lock to protect the data tables when they are being accessed
-    # data_lock = None
-
-    # The i2c_map will contain keys of i2c device addresses, and an associated list.
-    # The associated list will contain 2 elements:
-    # 1. A callback reference. This reference will be set to None if no callback was registered.
-    # 2. Data returned from a an i2c read request.
-
-    i2c_map = {}
-
-    # the active_sonar_map maps the sonar trigger pin number (the key) to the current data value returned
-    # if a callback was specified, it is stored in the map as well.
-    # an entry in the map consists of:
-    #   pin: [callback,[current_data_returned]]
-    active_sonar_map = {}
-
-    initial_response_table_entry = [None, None, 0, None, None]
-
-    # analog_response_table = []
-    # digital_response_table = []
-
     def __init__(self, pymata):
         """
         constructor for CommandHandler class
@@ -142,13 +121,21 @@ class PyMataCpxCommandHandler(threading.Thread):
             raise RuntimeError('Invalid pin number. Must be between 0 and 7.')
 
     def initialize_response_tables(self):
+        # response table indices
+        # index 0 = pin type: 32 = digital, 2 = analog
+        # index 1 = pin number
+        # index 2 = current value
+        # index 3 = internal callback association
+        # index 4 = external callback association
+        # index 5 = debounce time
+
         self.digital_response_table = [[] for _ in range(self.total_pins_discovered)]
         for entry in range(self.total_pins_discovered):
-            self.digital_response_table[entry] = [None, None, 0, None, None]
+            self.digital_response_table[entry] = [None, None, 0, None, None, None]
 
         self.analog_response_table = [[] for _ in range(self.number_of_analog_pins_discovered)]
         for entry in range(self.number_of_analog_pins_discovered):
-            self.digital_response_table[entry] = [None, None, 0, None, None]
+            self.analog_response_table[entry] = [None, None, 0, None, None, None]
 
     def stop(self):
         self.stop_event.set()
@@ -229,6 +216,8 @@ class PyMataCpxCommandHandler(threading.Thread):
                     callback([Constants.DIGITAL, pin,
                               self.digital_response_table[pin][Constants.RESPONSE_TABLE_PREV_DATA_VALUE]])
                     callback = None
+                    if self.digital_response_table[pin][Constants.RESPONSE_TABLE_DEBOUNCE_TIME]:
+                        time.sleep(self.digital_response_table[pin][Constants.RESPONSE_TABLE_DEBOUNCE_TIME])
 
             # get the next data bit
             port_data >>= 1
@@ -453,9 +442,10 @@ class PyMataCpxCommandHandler(threading.Thread):
 
             if response != self.analog_response_table[pin][Constants.RESPONSE_TABLE_PREV_DATA_VALUE]:
                 self.analog_response_table[pin][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = response
-                self.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]([pin, response, value])
+                self.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL](
+                    [Constants.ANALOG, pin, response, value])
 
-            time.sleep(.001)
+            time.sleep(.01)
 
         elif command == Constants.CP_IMPL_VERS_REPLY:
             # Parse implementation version response.
