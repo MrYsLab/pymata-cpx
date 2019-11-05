@@ -214,7 +214,6 @@
 /*==============================================================================
    GLOBAL VARIABLES
   ============================================================================*/
-int touch_channel = 0;
 
 // Circuit playground globals:
 bool streamTap = false;
@@ -320,6 +319,16 @@ byte wireRead(void)
   return Wire.receive();
 #endif
 }
+
+// touch channel to be processed in the loop
+int touch_channel = 0;
+
+// number of loops before accelerometer is processed
+int numLoops = 20 ;
+
+// count of loops for accelerometer processing
+int accLoopCounter = 0 ;
+
 
 /*==============================================================================
    FUNCTIONS
@@ -1517,14 +1526,21 @@ void loop()
         readAndReportData(query[i].addr, query[i].reg, query[i].bytes);
       }
     }
-    // Check if a tap event should be streamed to the firmata client.
-    if (streamTap) {
-      sendTapResponse();
+
+    if ( accLoopCounter++ > numLoops) {
+        accLoopCounter = 0 ;
+
+        // Check if an accelerometer event should be streamed to the firmata client.
+        if (streamAccel) {
+            sendAccelResponse();
+        }
     }
-    // Check if an accelerometer event should be streamed to the firmata client.
-    if (streamAccel) {
-      sendAccelResponse();
-    }
+
+      // Check if a tap event should be streamed to the firmata client.
+      if (streamTap) {
+          sendTapResponse();
+      }
+
     // Check if any cap touch inputs should be streamed to the firmata client.
 
     if (cap_state[touch_channel].streaming)

@@ -156,7 +156,7 @@ class PyMataCpx(object):
     def cpx_set_servo_angle(self, angle):
         """
         Control an external servo connected to pin
-        A2. If calling this method repeatedly, must
+        A3. If calling this method repeatedly, must
         include a sleep of .5 seconds between each
         call.
 
@@ -166,8 +166,8 @@ class PyMataCpx(object):
         # check angle range
         assert 0 <= angle <= 180, 'Servo Angle must be between 0 and 180'
 
-        # get the digital pin number for A2
-        pin = self.ad_pin_map[2]['mapped_pin']
+        # get the digital pin number for A3
+        pin = self.ad_pin_map[3]['mapped_pin']
 
         # only config the servo pin once
         if not self._servo_inuse:
@@ -302,7 +302,7 @@ class PyMataCpx(object):
         [Digital Pin Type: 32, Pin Number: 27, x_value, y_value, z_value]
 
         """
-
+        assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, 'TAP In Use'
         if self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE:
             self._accel_usage = Constants.ACCEL_USAGE_ACCEL
             with self._data_lock:
@@ -424,11 +424,15 @@ class PyMataCpx(object):
         single_tap: True or False, double_tap: True or False]
 
         """
+        assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, 'Accelerometer In Use'
+
         if self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE:
             self._accel_usage = Constants.ACCEL_USAGE_TAP
             with self._data_lock:
-                self._command_handler.digital_response_table[Constants.ACCEL_PSEUDO_PIN][
+                self._command_handler.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
                     Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = callback
+                self._command_handler.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
+                    Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = [False, False]
             self._command_handler.send_sysex(Constants.CP_COMMAND,
                                              [Constants.CP_ACCEL_TAP_STREAM_ON])
         else:

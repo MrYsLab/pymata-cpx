@@ -301,7 +301,9 @@ class PyMataCpxCommandHandler(threading.Thread):
         temp_c = self._therm_value_to_temp(raw)
         # Call any user callback
         if self.analog_response_table[0][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
-            self.analog_response_table[0][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]([temp_c])
+            if self.analog_response_table[0][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] != temp_c:
+                self.analog_response_table[0][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = temp_c
+                self.analog_response_table[0][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]([2, 0, temp_c])
 
     def _therm_value_to_temp(self, adc_value):
         """
@@ -358,10 +360,15 @@ class PyMataCpxCommandHandler(threading.Thread):
                 logger.warning('Received tap response with not enough data!')
                 return
             tap = self._parse_firmata_byte(data[2:4])
-            if self.digital_response_table[Constants.ACCEL_PSEUDO_PIN][
+            if self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
                     Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
-                self.digital_response_table[Constants.ACCEL_PSEUDO_PIN][
-                    Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL](*self._tap_register_to_clicks(tap))
+                taps = list(self._tap_register_to_clicks(tap))
+                if self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
+                    Constants.RESPONSE_TABLE_PREV_DATA_VALUE] != taps:
+                    self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
+                        Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = taps
+                    self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
+                        Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL](taps)
         elif command == Constants.CP_CAP_REPLY:
             # Parse capacitive sensor response.
             if len(data) < 12:

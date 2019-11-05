@@ -161,6 +161,7 @@ class Constants:
     ACCEL_USAGE_ACCEL = 1  # accel is being used as an accelerometer
     ACCEL_USAGE_TAP = 2  # accel is being used as a tap detector
     ACCEL_PSEUDO_PIN = 27  # to store info in analog
+    ACCEL_TAP_PSEUDO_PIN = 28 # store tap data separately
 
     # These values are the index into the data passed by firmata and used to reassemble integer values
     MSB = 2
