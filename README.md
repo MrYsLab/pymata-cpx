@@ -41,13 +41,15 @@ class TheTapper():
         # Start monitoring for tap events and
         # send event notifications to the "tapped" callback method.
         self.p.cpx_tap_start(self.tapped)
+        
+        # flag to start and stop the light show
         self.go = True
 
         while True:
-
             try:
                 # run the light show
                 for neopixel in range(0, 10):
+                    # check the go flag
                     if self.go:
                         self.p.cpx_pixels_clear()
                         self.p.cpx_pixels_show()
