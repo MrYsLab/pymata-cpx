@@ -1,9 +1,7 @@
 ![logo](https://github.com/MrYsLab/pymata-cpx/blob/master/docs/images/cpx.jpg)
 
-## Control And Monitor A Circuit Playground Express Using Python On Your PC
-
-Supports:
-* The Buttons and Slide Switch
+## Control And Monitor The Following CPX Devices Using Python On Your PC:
+* The Buttons and Slide Switch.
 * The D13 Board LED.
 * The 10 onboard neo-pixels.
 * Tone generation using the onboard speaker.
@@ -12,7 +10,7 @@ Supports:
 * The light sensor.
 * The sound sensor.
 * Touchpad sensing.
-* Servo control.
+* Servo motor (externally connected).
 
 This project was developed with
 [Pycharm](https://www.jetbrains.com/pycharm/)
