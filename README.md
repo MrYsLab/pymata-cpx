@@ -1,26 +1,5 @@
 ![logo](https://github.com/MrYsLab/pymata-cpx/blob/master/docs/images/cpx.jpg)
 
-=====================================================================================================
-### Pymata-cpx is a high performance, non-blocking, Python3 client for controlling and monitoring the Adafruit Circuit Play Ground Express
-
-### It supports the complete StandardFirmata protocol in addition to an enhanced version of StandardFirmata called FirmataExpress.
-
-<h2><u>Major features</u></h2>
-
-* **Python 3.7+ compatible.**
-
-* **Fully documented <a href="http://htmlpreview.github.io/?https://github.com/MrYsLab/pymata-express/blob/master/documentation/api/pymata_express.html" target="_blank">API</a>**
-
-* **[User's Guide](https://mryslab.github.io/pymata-express/), Including Examples.**
-
-* **Implements 100% of the StandardFirmata Protocol (StandardFirmata 2.5.8).**
-
-* **Advanced auto-detection of Arduino devices (when using FirmataExpress).**
-
-* **[FirmataExpress](https://github.com/MrYsLab/FirmataExpress) (enhanced StandardFirmata sketch) adds support for:**
-     * **HC-SR04 Ultrasonic Distance Sensors using a single pin.**
-     * **Stepper Motors.**
-     * **Piezo Tone Generation.**
-     * **Baud rate of 115200**
+# Control And Monitor The Following Circuit Playground Express Components With A Python3 Script Running On Your PC!
 
 This project was developed with [Pycharm](https://www.jetbrains.com/pycharm/) ![logo](https://github.com/MrYsLab/python_banyan/blob/master/images/icon_PyCharm.png)
