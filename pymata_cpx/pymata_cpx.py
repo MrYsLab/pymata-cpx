@@ -24,12 +24,12 @@ import threading
 import time
 from collections import deque
 
-
 from pymata_cpx_command_handler import PyMataCpxCommandHandler
 from pymata_cpx_serial import PyMataCpxSerial
 from constants import Constants
 
 logger = logging.getLogger(__name__)
+
 
 # noinspection PyPep8
 class PyMataCpx(object):
@@ -43,14 +43,14 @@ class PyMataCpx(object):
     _data_lock = threading.RLock()
     _command_deque = deque()
 
-    _accel_usage = 0 # 0 = available, 1 = accel, 2 = tap
+    _accel_usage = 0  # 0 = available, 1 = accel, 2 = tap
 
-    _servo_inuse = False # False = not yet initialized, True = initialized
+    _servo_inuse = False  # False = not yet initialized, True = initialized
 
     _sonar_configured = False
 
     # noinspection PyPep8Naming
-    def __init__(self, verbose = True, exit_on_exception=True):
+    def __init__(self, verbose=True, exit_on_exception=True):
         """
         The "constructor" instantiates the entire interface. It starts the operational threads for the serial
         interface as well as for the command handler.
@@ -79,7 +79,7 @@ class PyMataCpx(object):
                                }
             # each byte represents a digital port and its value contains the current port settings
             self._digital_output_port_pins = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+                                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
             self._accel_usage = Constants.ACCEL_USAGE_AVAILABLE
 
@@ -104,7 +104,7 @@ class PyMataCpx(object):
             # _command_handler.firmata_version
 
             self._command_handler.send_sysex(Constants.CP_COMMAND,
-                                                            [Constants.CP_IMPL_VERS])
+                                             [Constants.CP_IMPL_VERS])
             # wait for command to process
             time.sleep(1)
 
@@ -116,12 +116,12 @@ class PyMataCpx(object):
             else:
                 if verbose:
                     print('FirmataCPx Release Date: ' + str(self._command_handler.firmata_version[0]) + '-' +
-                        str(self._command_handler.firmata_version[1]) + '-' +
-                        str(self._command_handler.firmata_version[2]))
+                          str(self._command_handler.firmata_version[1]) + '-' +
+                          str(self._command_handler.firmata_version[2]))
                 else:
                     logger.info('FirmataCPx Release Date: ' + str(self._command_handler.firmata_version[0]) + '-' +
-                        str(self._command_handler.firmata_version[1]) + '-' +
-                        str(self._command_handler.firmata_version[2]))
+                                str(self._command_handler.firmata_version[1]) + '-' +
+                                str(self._command_handler.firmata_version[2]))
 
             # reset the board
             self.cpx_reset()
@@ -141,153 +141,24 @@ class PyMataCpx(object):
 
     # "public" methods
 
-    def cpx_board_light_on(self):
+    def cpx_accel_range_set(self, accel_range=0):
         """
-        Set the board red LED ON
-        """
-        self._digital_write(13, 1)
+        Set the range of the accelerometer.  Accel_range should be a value of:
 
-    def cpx_board_light_off(self):
-        """
-        Set the board red LED OFF
-        """
-        self._digital_write(13, 0)
+          - 0 = +/-2G (default)
 
-    def cpx_set_servo_angle(self, angle):
-        """
-        Control an external servo connected to pin
-        A3. If calling this method repeatedly, must
-        include a sleep of .5 seconds between each
-        call.
+          - 1 = +/-4G
 
-        :param angle: 0-180
+          - 2 = +/-8G
 
-        """
-        # check angle range
-        assert 0 <= angle <= 180, 'Servo Angle must be between 0 and 180'
+          - 3 = +/-16G
 
-        # get the digital pin number for A3
-        pin = self.ad_pin_map[3]['mapped_pin']
-
-        # only config the servo pin once
-        if not self._servo_inuse:
-            self._servo_inuse = True
-            self._servo_config(pin)
-
-        # set the angle
-        self._pwm_write(pin, angle)
-
-    def cpx_button_a_start(self, callback, debounce_time=.1):
-
-        """
-        Enable button and report state changes in the callback.
-
-        :param callback
-
-        :param debounce_time: switch debounce time default is .1 seconds
-
-        Parameters sent to callback:
-
-        [Digital Pin Type: 32, Pin Number: 4, switch value: 1 if pressed zero if released.]
-        """
-        self._cpx_start_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL, callback, debounce_time)
-
-
-    def cpx_button_a_stop(self):
-        """
-        Disable button a reporting.
-        """
-        self._cpx_stop_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL)
-
-    def cpx_button_b_start(self, callback, debounce_time=.1):
-
-        """
-        Enable button and report state changes in the callback.
-
-        :param callback
-
-        :param debounce_time: switch debounce time default is .1 seconds
-
-        Parameters sent to callback:
-
-        [Digital Pin Type: 32, Pin Number: 19, switch value: 1 if pressed zero if released.]
-
-        """
-        self._cpx_start_sensor(Constants.CPX_BUTTON_B,
-                               Constants.DIGITAL, callback, debounce_time)
-
-    def cpx_button_b_stop(self):
-        """
-        Disable button b reporting
-        """
-        self._cpx_stop_sensor(Constants.CPX_BUTTON_B, Constants.DIGITAL)
-
-    def cpx_slide_switch_start(self, callback, debounce_time=.1):
-
-        """
-        Enable button and report state changes in the callback
-
-        :param callback
-
-        :param debounce_time: switch debounce time default is .1 seconds
-
-        Parameters sent to callback:
-
-        [Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]
-        """
-        self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
-                               Constants.DIGITAL, callback, debounce_time)
-
-    def cpx_slide_switch_stop(self):
-        """
-        Disable slide switch reporting
+        :param accel_range:
         """
 
-        self._cpx_stop_sensor(Constants.CPX_SLIDE_SWITCH, Constants.DIGITAL)
-
-    def cpx_light_sensor_start(self, callback):
-        """
-        Enable the light sensor for streaming data and report
-        its value in the callback.
-
-        Parameters sent to callback:
-
-        [Analog Pin Type: 2, Pin Number: 5, current_value]
-
-        :param callback:
-        """
-        self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)
-
-    def cpx_light_sensor_stop(self):
-        """
-        Disable the light sensor reporting
-        its value in the callback.
-
-        """
-        self._cpx_stop_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG)
-
-    def cpx_microphone_start(self, callback):
-        """
-        Enable the light sensor for streaming data and report
-        its value in the callback.
-
-        :param callback:
-
-
-        Parameters sent to callback:
-
-        [Analog Pin Type: 2, Pin Number: 4, current_value]
-
-        """
-        self._cpx_start_sensor(Constants.CPX_MICROPHONE,
-                               Constants.ANALOG, callback, None)
-
-    def cpx_microphone_stop(self):
-        """
-        Disable the light sensor reporting
-        its value in the callback.
-        """
-        self._cpx_stop_sensor(Constants.CPX_MICROPHONE, Constants.ANALOG)
+        assert accel_range in [0, 1, 2, 3], 'Accel range must be one of 0, 1, 2, 3!'
+        self._command_handler.send_sysex(Constants.CP_COMMAND,
+                                         [Constants.CP_ACCEL_RANGE, accel_range & 0x7F])
 
     def cpx_accel_start(self, callback):
         """
@@ -295,7 +166,7 @@ class PyMataCpx(object):
         call the provided callback with accelerometer data. You may not
         use the device in both accelerometer and tap mode at the same time.
 
-        :param callback:
+        :param callback: a list of values described below.
 
         Parameters sent to callback:
 
@@ -325,19 +196,77 @@ class PyMataCpx(object):
                                          [Constants.CP_ACCEL_STREAM_OFF])
         self._accel_usage = Constants.ACCEL_USAGE_AVAILABLE
 
+    def cpx_board_light_off(self):
+        """
+        Set the board red LED OFF
+        """
+        self._digital_write(13, 0)
+
+    def cpx_board_light_on(self):
+        """
+        Set the board red LED ON
+        """
+        self._digital_write(13, 1)
+
+    def cpx_button_a_start(self, callback, debounce_time=.1):
+
+        """
+        Enable button and report state changes in the callback.
+
+        :param callback: a list of values described below.
+
+        :param debounce_time: switch debounce time default is .1 seconds
+
+        Parameters sent to callback:
+
+        [Digital Pin Type: 32, Pin Number: 4, switch value: 1 if pressed zero if released.]
+        """
+        self._cpx_start_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL, callback, debounce_time)
+
+    def cpx_button_a_stop(self):
+        """
+        Disable button a reporting.
+        """
+        self._cpx_stop_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL)
+
+    def cpx_button_b_start(self, callback, debounce_time=.1):
+
+        """
+        Enable button and report state changes in the callback.
+
+        :param callback: a list of values described below.
+
+        :param debounce_time: switch debounce time default is .1 seconds
+
+        Parameters sent to callback:
+
+        [Digital Pin Type: 32, Pin Number: 19, switch value: 1 if pressed zero if released.]
+
+        """
+        self._cpx_start_sensor(Constants.CPX_BUTTON_B,
+                               Constants.DIGITAL, callback, debounce_time)
+
+    def cpx_button_b_stop(self):
+        """
+        Disable button b reporting.
+        """
+        self._cpx_stop_sensor(Constants.CPX_BUTTON_B, Constants.DIGITAL)
+
     def cpx_cap_touch_start(self, input_pin, callback):
         """
         Start continuous capacitive touch queries for the specified input
         pin.  Will invoke the provided callback each time a new cap touch result
         is available.
 
-        :param input_pin: must be one of the Ax pin numbers
+        :param input_pin: must be one of the Ax pin numbers. Use only the number.
 
-        :param callback:
+                          example: cpx_cap_touch_start(5, a_callback_function)
+
+        :param callback: a list of values described below.
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: A1-A7, Touched: True or False, Raw data value]
+        [Analog Pin Type: 2, Pin Number: 1-7, Touched: True or False, Raw data value]
 
 
         """
@@ -361,7 +290,9 @@ class PyMataCpx(object):
         Stop continuous capacitive touch queries for the specified input
         pin.
 
-        :param input_pin: Ax where x 1 to 7
+        :param input_pin: Ax where x is 1 to 7. Only the numeral is used.
+
+                          example: cpx_cap_touch_stop(5)
         """
 
         assert input_pin in [1, 2, 3, 4, 5, 6, 7], \
@@ -378,76 +309,81 @@ class PyMataCpx(object):
         self._command_handler.send_sysex(Constants.CP_COMMAND,
                                          [Constants.CP_CAP_OFF, pin & 0x7F])
 
-    def cpx_temperature_start(self, callback):
+    def cpx_close_and_exit(self):
         """
-        Enable reading data from the thermistor.
-        The callback should take two arguments,
-        the temperature in celsius, and the raw ADC value of the thermistor.
+        This method will close and stop the command handler,
+        reset the Circuit Playground Express and then
+        close the transport (serial port). It will then
+        reset the circuit playground and exit.
+        """
+        self._command_handler.system_reset()
+        self._command_handler.stop()
+        self.cpx_reset()
+        self.transport.stop()
+        try:
+            self.transport.close()
+        except TypeError:
+            pass
+        sys.exit(0)
 
-        :param callback: user callback function
+    def cpx_light_sensor_start(self, callback):
+        """
+        Enable the light sensor for streaming data and report
+        its value in the callback.
+
+        :param callback:a list of values described below.
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 27, x_value, y_value, z_value]
+        [Analog Pin Type: 2, Pin Number: 5, current_value]
 
         """
-        try:
-            self._set_pin_mode(0, Constants.INPUT,
-                              Constants.ANALOG,
-                              callback,
-                              self._command_handler._therm_handler, None)
-        except IndexError:
-            raise
+        self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)
 
-    def cpx_temperature_stop(self):
+    def cpx_light_sensor_stop(self):
         """
-        Stop streaming temperature data from the thermistor
-        The thermistor is connected to pin 0
-        """
-        with self._data_lock:
-            self._command_handler.digital_response_table[0][
-                Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
-            self._command_handler.digital_response_table[0][
-                Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = None
-        self._disable_analog_reporting(0)
-
-    def cpx_tap_start(self, callback):
-        """
-        Request to start streaming tap data from the board.  Will call the
-        provided callback with tap data. You may not
-        use the device in both accelerometer and tap mode at the same time.
-
-        :param callback:
-
-
-        Parameters sent to callback: [Digital Pin Type: 32, Pin Number: 27,
-        single_tap: True or False, double_tap: True or False]
+        Disable light sensor reporting.
 
         """
-        assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, 'Accelerometer In Use'
+        self._cpx_stop_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG)
 
-        if self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE:
-            self._accel_usage = Constants.ACCEL_USAGE_TAP
-            with self._data_lock:
-                self._command_handler.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
-                    Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = callback
-                self._command_handler.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
-                    Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = [False, False]
-            self._command_handler.send_sysex(Constants.CP_COMMAND,
-                                             [Constants.CP_ACCEL_TAP_STREAM_ON])
-        else:
-            logger.warning('cpx_start_tap: accelerometer is in use')
+    def cpx_microphone_start(self, callback):
+        """
+        Enable the light sensor for streaming data and report
+        its value in the callback.
 
-    def cpx_tap_stop(self):
+        :param callback: a list of values described below.
+
+        Parameters sent to callback:
+
+        [Analog Pin Type: 2, Pin Number: 4, current_value]
+
         """
-        Stop streaming tap data from the board.
+        self._cpx_start_sensor(Constants.CPX_MICROPHONE,
+                               Constants.ANALOG, callback, None)
+
+    def cpx_microphone_stop(self):
         """
-        with self._data_lock:
-            self._command_handler.digital_response_table[Constants.ACCEL_PSEUDO_PIN][
-                Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
+        Disable the light sensor reporting.
+        """
+        self._cpx_stop_sensor(Constants.CPX_MICROPHONE, Constants.ANALOG)
+
+    def cpx_pixel_brightness_level(self, brightness):
+        """
+        Set the brightness of all the NeoPixels.  Brightness will be a value
+        from 0-100 where 0 means completely dark/no brightness and 100 is full
+        brightness.  Note that animating the brightness won't work the way you
+        might expect!  If you go down to 0 brightness you will 'lose' information
+        and not be able to go back up to higher brightness levels.  Instead
+        this is meant to be called once at the start to limit the brightness
+        of pixels that are later set.
+
+        :param brightness: 0-100
+        """
+
+        assert 0 <= brightness <= 100, 'Brightness must be a value of 0-100!'
         self._command_handler.send_sysex(Constants.CP_COMMAND,
-                                         [Constants.CP_ACCEL_TAP_STREAM_OFF])
-        self._accel_usage = Constants.ACCEL_USAGE_AVAILABLE
+                                         [Constants.CP_PIXEL_BRIGHTNESS, brightness & 0x7F])
 
     def cpx_pixel_set(self, pixel, red, green, blue):
         """
@@ -458,8 +394,11 @@ class PyMataCpx(object):
         see the actual pixel colors change!
 
         :param pixel: 0-9
+
         :param red: 0-255
+
         :param green: 0-255
+
         :param blue: 0-255
         """
 
@@ -497,22 +436,179 @@ class PyMataCpx(object):
         self._command_handler.send_sysex(Constants.CP_COMMAND,
                                          [Constants.CP_PIXEL_SHOW])
 
-    def cpx_pixel_brightness_level(self, brightness):
+    def cpx_reset(self):
         """
-        Set the brightness of all the NeoPixels.  Brightness will be a value
-        from 0-100 where 0 means completely dark/no brightness and 100 is full
-        brightness.  Note that animating the brightness won't work the way you
-        might expect!  If you go down to 0 brightness you will 'lose' information
-        and not be able to go back up to higher brightness levels.  Instead
-        this is meant to be called once at the start to limit the brightness
-        of pixels that are later set.
-
-        :param brightness: 0-100
+        This command sends a reset message to the Circuit Playground Express.
+        The response tables will be reinitialized.
         """
 
-        assert 0 <= brightness <= 100, 'Brightness must be a value of 0-100!'
+        # set all output pins to a value of 0
+        for pin in range(0, self._command_handler.total_pins_discovered):
+            if self._command_handler.digital_response_table[Constants.RESPONSE_TABLE_MODE] \
+                    == Constants.PWM:
+                self._pwm_write(pin, 0)
+            elif self._command_handler.digital_response_table[Constants.RESPONSE_TABLE_MODE] \
+                    == Constants.SERVO:
+                self._pwm_write(pin, 0)
+        self._command_handler.system_reset()
+
+    def cpx_set_servo_angle(self, angle):
+        """
+        Control an external servo connected to pin
+        A3. If calling this method repeatedly, must
+        include a sleep of .5 seconds between each
+        call.
+
+        :param angle: 0-180
+
+        """
+        # check angle range
+        assert 0 <= angle <= 180, 'Servo Angle must be between 0 and 180'
+
+        # get the digital pin number for A3
+        pin = self.ad_pin_map[3]['mapped_pin']
+
+        # only config the servo pin once
+        if not self._servo_inuse:
+            self._servo_inuse = True
+            self._servo_config(pin)
+
+        # set the angle
+        self._pwm_write(pin, angle)
+
+    def cpx_slide_switch_start(self, callback, debounce_time=.1):
+
+        """
+        Enable button and report state changes in the callback
+
+        :param callback: a list of values described below.
+
+        :param debounce_time: switch debounce time default is .1 seconds
+
+        Parameters sent to callback:
+
+        [Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]
+        """
+        self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
+                               Constants.DIGITAL, callback, debounce_time)
+
+    def cpx_slide_switch_stop(self):
+        """
+        Disable slide switch reporting.
+        """
+
+        self._cpx_stop_sensor(Constants.CPX_SLIDE_SWITCH, Constants.DIGITAL)
+
+    def cpx_tap_config_set(self, tap_type=0, threshold=80):
+        """
+        Set the tap detection configuration.  Tap_type should be a value of:
+
+          - 0 = no tap detection
+
+          - 1 = single tap detection
+
+          - 2 = single & double tap detection (default)
+
+        Threshold controls the sensitivity of the detection and is a value FROM
+        0 to 255, the higher the value the less sensitive the detection.  This
+        value depends on the accelerometer range and good values are:
+          - Accel range +/-16G = 5-10
+
+          - Accel range +/-8G  = 10-20
+
+          - Accel range +/-4G  = 20-40
+
+          - Accel range +/-2G  = 40-80 (80 is the default)
+
+        :param tap_type:
+
+        :param threshold:
+        """
+        assert tap_type in [0, 1, 2], 'Type must be one of 0, 1, 2!'
+        assert 0 <= threshold <= 255, 'Threshold must be a value 0-255!'
+        # Assemble data to send by turning each unsigned 8 bit values into two
+        # 7-bit values that firmata can understand.  The most significant bits
+        # are first and the least significant (7th) bit follows.
+        tap_type_low = tap_type & 0x7F
+        tap_type_high = (tap_type & 0xFF) >> 7
+        threshold_low = threshold & 0x7F
+        threshold_high = (threshold & 0xFF) >> 7
+        # Send command.
         self._command_handler.send_sysex(Constants.CP_COMMAND,
-                                         [Constants.CP_PIXEL_BRIGHTNESS, brightness & 0x7F])
+                                         [Constants.CP_ACCEL_TAP_CONFIG,
+                                          tap_type_low, tap_type_high, threshold_low, threshold_high])
+
+    def cpx_tap_start(self, callback):
+        """
+        Request to start streaming tap data from the board.  Will call the
+        provided callback with tap data. You may not
+        use the device in both accelerometer and tap mode at the same time.
+
+        :param callback: a list of values described below.
+
+
+        Parameters sent to callback:
+
+        [Digital Pin Type: 32, Pin Number: 27,
+        single_tap: True or False, double_tap: True or False]
+
+        """
+        assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, 'Accelerometer In Use'
+
+        if self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE:
+            self._accel_usage = Constants.ACCEL_USAGE_TAP
+            with self._data_lock:
+                self._command_handler.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
+                    Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = callback
+                self._command_handler.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
+                    Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = [False, False]
+            self._command_handler.send_sysex(Constants.CP_COMMAND,
+                                             [Constants.CP_ACCEL_TAP_STREAM_ON])
+        else:
+            logger.warning('cpx_start_tap: accelerometer is in use')
+
+    def cpx_tap_stop(self):
+        """
+        Stop streaming tap data from the board.
+        """
+        with self._data_lock:
+            self._command_handler.digital_response_table[Constants.ACCEL_PSEUDO_PIN][
+                Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
+        self._command_handler.send_sysex(Constants.CP_COMMAND,
+                                         [Constants.CP_ACCEL_TAP_STREAM_OFF])
+        self._accel_usage = Constants.ACCEL_USAGE_AVAILABLE
+
+    def cpx_temperature_start(self, callback):
+        """
+        Enable reading data from the thermistor.
+        The callback should take two arguments,
+        the temperature in celsius, and the raw ADC value of the thermistor.
+
+        :param callback: a list of values described below.
+
+        Parameters sent to callback:
+
+        [Analog Pin Type: 2, Pin Number: 0, temperature in degrees C]
+
+        """
+        try:
+            self._set_pin_mode(0, Constants.INPUT,
+                               Constants.ANALOG,
+                               callback,
+                               self._command_handler._therm_handler, None)
+        except IndexError:
+            raise
+
+    def cpx_temperature_stop(self):
+        """
+        Stop streaming temperature data from the thermistor.
+        """
+        with self._data_lock:
+            self._command_handler.digital_response_table[0][
+                Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
+            self._command_handler.digital_response_table[0][
+                Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = None
+        self._disable_analog_reporting(0)
 
     def cpx_tone(self, frequency_hz, duration_ms=0):
         """
@@ -520,7 +616,7 @@ class PyMataCpx(object):
         duration (in milliseconds) using the Circuit Playground board speaker.
         Both frequency and duration can be at most 16,384.  Duration is optional
         and if not specified the tone will continue to play forever (or until
-        no_tone is called).
+        cpx_tone_off is called).
 
         :param frequency_hz:
 
@@ -547,71 +643,6 @@ class PyMataCpx(object):
         self._command_handler.send_sysex(Constants.CP_COMMAND,
                                          [Constants.CP_NO_TONE])
 
-    def cpx_accel_range_set(self, accel_range=0):
-        """
-        Set the range of the accelerometer.  Accel_range should be a value of:
-          - 0 = +/-2G (default)
-          - 1 = +/-4G
-          - 2 = +/-8G
-          - 3 = +/-16G
-
-        :param accel_range:
-        """
-
-        assert accel_range in [0, 1, 2, 3], 'Accel range must be one of 0, 1, 2, 3!'
-        self._command_handler.send_sysex(Constants.CP_COMMAND,
-                                         [Constants.CP_ACCEL_RANGE, accel_range & 0x7F])
-
-    def cpx_tap_config_set(self, tap_type=0, threshold=80):
-        """
-        Set the tap detection configuration.  Tap_type should be a value of:
-          - 0 = no tap detection
-          - 1 = single tap detection
-          - 2 = single & double tap detection (default)
-
-        Threshold controls the sensitivity of the detection and is a value FROM
-        0 to 255, the higher the value the less sensitive the detection.  This
-        value depends on the accelerometer range and good values are:
-          - Accel range +/-16G = 5-10
-          - Accel range +/-8G  = 10-20
-          - Accel range +/-4G  = 20-40
-          - Accel range +/-2G  = 40-80 (80 is the default)
-
-        :param tap_type:
-
-        :param threshold:
-        """
-        assert tap_type in [0, 1, 2], 'Type must be one of 0, 1, 2!'
-        assert 0 <= threshold <= 255, 'Threshold must be a value 0-255!'
-        # Assemble data to send by turning each unsigned 8 bit values into two
-        # 7-bit values that firmata can understand.  The most significant bits
-        # are first and the least significant (7th) bit follows.
-        tap_type_low = tap_type & 0x7F
-        tap_type_high = (tap_type & 0xFF) >> 7
-        threshold_low = threshold & 0x7F
-        threshold_high = (threshold & 0xFF) >> 7
-        # Send command.
-        self._command_handler.send_sysex(Constants.CP_COMMAND,
-                                         [Constants.CP_ACCEL_TAP_CONFIG,
-                                          tap_type_low, tap_type_high, threshold_low, threshold_high])
-
-    def cpx_reset(self):
-        """
-        This command sends a reset message to the Circuit Playground Express.
-        The response tables will be reinitialized
-        """
-
-        # set all output pins to a value of 0
-        for pin in range(0, self._command_handler.total_pins_discovered):
-            if self._command_handler.digital_response_table[Constants.RESPONSE_TABLE_MODE] \
-                    == Constants.PWM:
-                self._pwm_write(pin, 0)
-            elif self._command_handler.digital_response_table[Constants.RESPONSE_TABLE_MODE] \
-                    == Constants.SERVO:
-                self._pwm_write(pin, 0)
-        self._command_handler.system_reset()
-
-
     # "private methods"
     def _analog_read(self, pin):
         """
@@ -625,20 +656,51 @@ class PyMataCpx(object):
             data = self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_PREV_DATA_VALUE]
         return data
 
-    def _pwm_write(self, pin, value):
+    def _cpx_start_sensor(self, pin, pin_type, callback, debounce_time=None):
         """
-        Set the specified pin to the specified value.
-
-        :param pin: Pin number
-
-        :param value: Pin value
+        Start sensor streaming for dedicated sensors
+        :param pin:
+        :param pin_type: digital or analog
+        :param callback:
+        :return:
         """
 
-        if Constants.ANALOG_MESSAGE + pin < 0xf0:
-            command = [Constants.ANALOG_MESSAGE + pin, value & 0x7f, (value >> 7) & 0x7f]
-            self._command_handler.send_command(command)
+        if pin_type == Constants.DIGITAL:
+            # get record for this pin
+            the_record = self._command_handler.digital_response_table[pin]
+            if the_record[Constants.RESPONSE_TABLE_MODE] is None:
+                self._set_pin_mode(pin, Constants.INPUT, Constants.DIGITAL, callback, None, debounce_time)
+
+            # self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
+            #     callback
+            self._enable_digital_reporting(pin)
         else:
-            self._extended_analog(pin, value)
+            the_record = self._command_handler.analog_response_table[pin]
+            if the_record[Constants.RESPONSE_TABLE_MODE] is None:
+                self._set_pin_mode(pin, Constants.INPUT, Constants.ANALOG, callback, None, None)
+            # self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
+            #     callback
+            self._enable_analog_reporting(pin)
+
+    def _cpx_stop_sensor(self, pin, pin_type):
+        """
+        Stop sensor streaming for dedicated sensors
+
+        :param pin:
+
+        """
+        if pin_type == Constants.DIGITAL:
+            self._disable_digital_reporting(pin)
+            self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
+                None
+            self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = \
+                None
+        else:
+            self._disable_analog_reporting(pin)
+            self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
+                None
+            self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = \
+                None
 
     def _digital_read(self, pin):
         """
@@ -694,7 +756,6 @@ class PyMataCpx(object):
         :return: No return value
         """
         self._command_handler.analog_response_table[pin] = [None, None, 0, None, None, None]
-
 
         command = [Constants.REPORT_ANALOG + pin, Constants.REPORTING_DISABLE]
         self._command_handler.send_command(command)
@@ -752,7 +813,32 @@ class PyMataCpx(object):
         analog_data = [pin, data & 0x7f, (data >> 7) & 0x7f, (data >> 14) & 0x7f]
         self._command_handler.send_sysex(Constants.EXTENDED_ANALOG, analog_data)
 
+    def _map_analog_pin_to_digital_pin(self, pin):
+        """
+        The user expresses all pins using their A number.
+        Translate a digital pin number to its analog equivalent.
+        :param pin:
+        :return: analog pin number
+        """
+        if pin in self.ad_pin_map:
+            return self.ad_pin_map[pin]['mapped_pin']
+        else:
+            raise RuntimeError('Invalid pin number. Must be between 0 and 7.')
 
+    def _pwm_write(self, pin, value):
+        """
+        Set the specified pin to the specified value.
+
+        :param pin: Pin number
+
+        :param value: Pin value
+        """
+
+        if Constants.ANALOG_MESSAGE + pin < 0xf0:
+            command = [Constants.ANALOG_MESSAGE + pin, value & 0x7f, (value >> 7) & 0x7f]
+            self._command_handler.send_command(command)
+        else:
+            self._extended_analog(pin, value)
 
     def _set_pin_mode(self, pin, mode, pin_type, cb_external=None, cb_internal=None, debounce_time=None):
         """
@@ -843,81 +929,3 @@ class PyMataCpx(object):
                    max_pulse & 0x7f, (max_pulse >> 7) & 0x7f]
 
         self._command_handler.send_sysex(Constants.SERVO_CONFIG, command)
-
-
-
-    # "Private" methods
-    def cpx_close_and_exit(self):
-        """
-        This method will close and stop the command handler,
-        reset the Circuit Playground Express and then
-        close the transport (serial port). It will then
-        reset and exit.
-        """
-        self._command_handler.system_reset()
-        self._command_handler.stop()
-        self.cpx_reset()
-        self.transport.stop()
-        try:
-            self.transport.close()
-        except TypeError:
-            pass
-        sys.exit(0)
-
-    def _cpx_start_sensor(self, pin, pin_type, callback, debounce_time=None):
-        """
-        Start sensor streaming for dedicated sensors
-        :param pin:
-        :param pin_type: digital or analog
-        :param callback:
-        :return:
-        """
-
-        if pin_type == Constants.DIGITAL:
-            # get record for this pin
-            the_record = self._command_handler.digital_response_table[pin]
-            if the_record[Constants.RESPONSE_TABLE_MODE] is None:
-                self._set_pin_mode(pin, Constants.INPUT, Constants.DIGITAL, callback, None, debounce_time)
-
-            # self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
-            #     callback
-            self._enable_digital_reporting(pin)
-        else:
-            the_record = self._command_handler.analog_response_table[pin]
-            if the_record[Constants.RESPONSE_TABLE_MODE] is None:
-                self._set_pin_mode(pin, Constants.INPUT, Constants.ANALOG, callback, None, None)
-            # self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
-            #     callback
-            self._enable_analog_reporting(pin)
-
-    def _cpx_stop_sensor(self, pin, pin_type):
-        """
-        Stop sensor streaming for dedicated sensors
-
-        :param pin:
-
-        """
-        if pin_type == Constants.DIGITAL:
-            self._disable_digital_reporting(pin)
-            self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
-            None
-            self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = \
-                None
-        else:
-            self._disable_analog_reporting(pin)
-            self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
-            None
-            self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = \
-                None
-
-    def _map_analog_pin_to_digital_pin(self, pin):
-        """
-        The user expresses all pins using their A number.
-        Translate a digital pin number to its analog equivalent.
-        :param pin:
-        :return: analog pin number
-        """
-        if pin in self.ad_pin_map:
-            return self.ad_pin_map[pin]['mapped_pin']
-        else:
-            raise RuntimeError('Invalid pin number. Must be between 0 and 7.')
