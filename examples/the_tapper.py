@@ -23,17 +23,20 @@ from pymata_cpx.pymata_cpx import PyMataCpx
 
 class TheTapper():
     """
-    Turn LEDs in a counter-clockwise fashion with randomly generated colors.
+    Illuminate the neopixels in a counter-clockwise fashion with randomly generated colors.
     When you tap the playground express, the neopixels will stop changing and the
-    program exits. Tap again and the neopixels will start again.
+    program pauses. Tap again and the neopixels will start again.
     """
     def __init__(self):
+        # create an instance of the API
         self.p = PyMataCpx()
 
         print('Tap the playground express to stop the neopixels from moving.')
         print('Tap again, to start them up')
         print('The tap state will be printed to the console')
 
+        # Start monitoring for tap events and
+        # send event notifications to the tapped method.
         self.p.cpx_tap_start(self.tapped)
         self.go = True
 
@@ -55,8 +58,6 @@ class TheTapper():
                         self.p.cpx_pixels_clear()
                         self.p.cpx_pixels_show()
                         time.sleep(.001)
-            # else:
-            #     time.sleep(.01)
             except KeyboardInterrupt:
                 # If you press control-C, cleanly exit
                 self.p.cpx_pixels_clear()
@@ -65,14 +66,17 @@ class TheTapper():
 
     def tapped(self, data):
         """
-        Turn off the light show and exit
-        :param data: data[0] = 2 indicating this is analog data
-                     data[1] = pin attached to mic- pin 4
-                     data[3] = readings from microphone
+        :param data: data[0] = data type (analog = 2, digital =32)
+                     data[1] = pin for device 27
+                     data[2] = tap data - list of booleans.
+                               First value for 1 tap
+                               Second value for 2 taps
         """
-        if data != [False, False]:
+        # for any taps, toggle the go flag
+        # print out the current tap state
+        if data[2] != [False, False]:
             self.go = not self.go
             print(self.go)
 
-
+# start the program
 TheTapper()

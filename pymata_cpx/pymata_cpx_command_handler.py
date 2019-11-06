@@ -23,7 +23,7 @@ import struct
 import threading
 import time
 
-from constants import Constants
+from .constants import Constants
 
 logger = logging.getLogger(__name__)
 
@@ -368,7 +368,8 @@ class PyMataCpxCommandHandler(threading.Thread):
                     self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
                         Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = taps
                     self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
-                        Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL](taps)
+                        Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL](
+                        [Constants.DIGITAL, Constants.ACCEL_TAP_PSEUDO_PIN, taps])
         elif command == Constants.CP_CAP_REPLY:
             # Parse capacitive sensor response.
             if len(data) < 12:
