@@ -1,8 +1,8 @@
 ![logo](https://github.com/MrYsLab/pymata-cpx/blob/master/docs/images/cpx.jpg)
 
-## Remotely Control And Monitor A Circuit Playground Express
+## A Simple To Use Python API Allowing You To Remotely Control And Monitor A Circuit Playground Express
 
-Provides a simple to use API that supports the following CPX devices:
+Supports the following CPX devices:
 * The Buttons and Slide Switch.
 * The D13 Board LED.
 * The 10 onboard neo-pixels.
