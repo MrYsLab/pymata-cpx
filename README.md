@@ -14,7 +14,9 @@ It supports the following CPX devices:
 * Touchpad sensors.
 * Servo motor (externally connected).
 
-One of the included examples:
+An example to animate the neopixels and to start and stop the animation
+by simply tapping the Playground Express:
+
 ```python
 import random
 import time
@@ -79,7 +81,7 @@ class TheTapper():
             self.go = not self.go
             print(self.go)
 
-
+# start the program
 TheTapper()
 
 ```
