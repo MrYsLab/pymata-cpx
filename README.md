@@ -55,8 +55,6 @@ class TheTapper():
                         self.p.cpx_pixels_clear()
                         self.p.cpx_pixels_show()
                         time.sleep(.001)
-            # else:
-            #     time.sleep(.01)
             except KeyboardInterrupt:
                 # If you press control-C, cleanly exit
                 self.p.cpx_pixels_clear()
