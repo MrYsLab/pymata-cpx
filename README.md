@@ -2,7 +2,7 @@
 
 ## Remotely Control And Monitor A Circuit Playground Express
 
-Provides a simple to use API and aupports the following CPX devices:
+Provides a simple to use API that supports the following CPX devices:
 * The Buttons and Slide Switch.
 * The D13 Board LED.
 * The 10 onboard neo-pixels.
