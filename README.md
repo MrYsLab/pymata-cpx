@@ -1,4 +1,4 @@
-![logo](https://raw.github.com/MrYsLab/pymata-cpx/master/docs/images/cpx.jpg)
+![logo](https://github.com/MrYsLab/pymata-cpx/blob/master/docs/images/cpx.jpg)
 
 =====================================================================================================
 ### Pymata-cpx is a high performance, non-blocking, Python3 client for controlling and monitoring the Adafruit Circuit Play Ground Express
