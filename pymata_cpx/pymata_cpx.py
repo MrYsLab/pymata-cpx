@@ -84,9 +84,9 @@ class PyMataCpx(object):
             self._accel_usage = Constants.ACCEL_USAGE_AVAILABLE
 
             if verbose:
-                print('\npymata-cpx version 1.00  Copyright(C) 2019 Alan Yorinks    All rights reserved.')
+                print('\npymata-cpx version 1.0  Copyright(C) 2019 Alan Yorinks    All rights reserved.')
             else:
-                logger.info('pymata-cpx version 1.00  Copyright(C) 2019 Alan Yorinks    All rights reserved.')
+                logger.info('pymata-cpx version 1.0  Copyright(C) 2019 Alan Yorinks    All rights reserved.')
 
             # Instantiate the serial support class
             self.transport = PyMataCpxSerial(self)
