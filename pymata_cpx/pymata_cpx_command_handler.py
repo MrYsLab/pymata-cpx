@@ -23,7 +23,11 @@ import struct
 import threading
 import time
 
-from constants import Constants
+try:
+    from constants import Constants
+except ImportError:
+    from .constants import Constants
+
 
 logger = logging.getLogger(__name__)
 

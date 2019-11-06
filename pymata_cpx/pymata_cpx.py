@@ -24,9 +24,20 @@ import threading
 import time
 from collections import deque
 
-from pymata_cpx_command_handler import PyMataCpxCommandHandler
-from pymata_cpx_serial import PyMataCpxSerial
-from constants import Constants
+try:
+    from pymata_cpx_command_handler import PyMataCpxCommandHandler
+except ImportError:
+    from .pymata_cpx_command_handler import PyMataCpxCommandHandler
+
+try:
+    from pymata_cpx_serial import PyMataCpxSerial
+except ImportError:
+    from .pymata_cpx_serial import PyMataCpxSerial
+
+try:
+    from constants import Constants
+except ImportError:
+    from .constants import Constants
 
 logger = logging.getLogger(__name__)
 
