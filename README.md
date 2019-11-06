@@ -1,6 +1,8 @@
 ![logo](https://github.com/MrYsLab/pymata-cpx/blob/master/docs/images/cpx.jpg)
 
-## Control And Monitor The Following CPX Devices Using Python On Your PC:
+## Remotely Control And Monitor A CPX From Your PC!
+
+Supports the following devices:
 * The Buttons and Slide Switch.
 * The D13 Board LED.
 * The 10 onboard neo-pixels.
