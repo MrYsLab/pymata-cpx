@@ -78,7 +78,7 @@ class TheTapper():
                                Second value for 2 taps
         """
         # for any taps, toggle the go flag
-        # print out the current tap state
+        # print out the current go state
         if data[2] != [False, False]:
             self.go = not self.go
             print(self.go)
