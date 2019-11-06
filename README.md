@@ -39,7 +39,7 @@ class TheTapper():
         print('The tap state will be printed to the console')
 
         # Start monitoring for tap events and
-        # send event notifications to the tapped method.
+        # send event notifications to the "tapped" callback method.
         self.p.cpx_tap_start(self.tapped)
         self.go = True
 
