@@ -33,7 +33,7 @@ class PyMataCpxSerial(threading.Thread):
     # class variables
     # arduino = serial.Serial()
 
-    def __init__(self, pymata):
+    def __init__(self, pymata, com_port):
         """
         Constructor:
         :param pymata: the pymata instance
@@ -47,32 +47,38 @@ class PyMataCpxSerial(threading.Thread):
         self.com_port = None
         the_ports_list = list_ports.comports()
 
-        for port in the_ports_list:
-            try:
-                if '239A:8018' in port.hwid:
-                    self.com_port = port.device
-                    if self.pymata.verbose:
-                        print('CPx Found on port: ', port.device)
-                    else:
-                        logger.info('CPx Found on port: ', port.device)
-                    break
-            except TypeError:
-                continue
-        if self.com_port is None:
-            if self.pymata.verbose:
-                print('CPE Not Found')
-            else:
-                logger.warning('CPE Not Found')
+        if com_port:
+            self.com_port = com_port
+            print('Using user specified com_port:', com_port)
 
-            if self.pymata.exit_on_exception:
-                sys.exit(0)
         else:
-            self.cpx = serial.Serial(self.com_port, 115200,
-                                     timeout=1, writeTimeout=0)
+            for port in the_ports_list:
+                try:
+                    if '239A:8018' in port.hwid:
+                        self.com_port = port.device
+                        if self.pymata.verbose:
+                            print('CPx Found on port: ', port.device)
+                        else:
+                            logger.info('CPx Found on port: ', port.device)
+                        break
+                except TypeError:
+                    continue
+            if self.com_port is None:
+                if self.pymata.verbose:
+                    print('CPE Not Found')
+                else:
+                    logger.warning('CPE Not Found')
 
-            threading.Thread.__init__(self)
-            self.daemon = True
-            self.stop_event = threading.Event()
+                if self.pymata.exit_on_exception:
+                    sys.exit(0)
+
+
+        self.cpx = serial.Serial(self.com_port, 115200,
+                                 timeout=1, writeTimeout=0)
+
+        threading.Thread.__init__(self)
+        self.daemon = True
+        self.stop_event = threading.Event()
 
     def stop(self):
         self.stop_event.set()

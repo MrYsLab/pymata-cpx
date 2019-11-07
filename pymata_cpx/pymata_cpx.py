@@ -61,7 +61,7 @@ class PyMataCpx(object):
     _sonar_configured = False
 
     # noinspection PyPep8Naming
-    def __init__(self, verbose=True, exit_on_exception=True):
+    def __init__(self, verbose=True, exit_on_exception=True, com_port=None):
         """
         The "constructor" instantiates the entire interface. It starts the operational threads for the serial
         interface as well as for the command handler.
@@ -69,6 +69,8 @@ class PyMataCpx(object):
         :param verbose: Set to False to suppress output to screen
 
         :param exit_on_exception: Set to False to suppress exiting on exception
+
+        :param com_port: User specified com port
         """
 
         try:
@@ -100,7 +102,7 @@ class PyMataCpx(object):
                 logger.info('pymata-cpx version 1.0  Copyright(C) 2019 Alan Yorinks    All rights reserved.')
 
             # Instantiate the serial support class
-            self.transport = PyMataCpxSerial(self)
+            self.transport = PyMataCpxSerial(self, com_port)
 
             # Start the data receive thread
             self.transport.start()
