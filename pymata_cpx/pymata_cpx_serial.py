@@ -49,7 +49,7 @@ class PyMataCpxSerial(threading.Thread):
 
         for port in the_ports_list:
             try:
-                if 'Circuit Playground Express' in port.product:
+                if '239A:8018' in port.hwid:
                     self.com_port = port.device
                     if self.pymata.verbose:
                         print('CPx Found on port: ', port.device)
