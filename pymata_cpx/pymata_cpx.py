@@ -78,7 +78,8 @@ class PyMataCpx(object):
             self.verbose = verbose
             self.exit_on_exception = exit_on_exception
 
-            # create an analog to digital pin map so that analog pin numbers
+            # Create an analog to digital pin map so that analog pin numbers
+            # may be used for all functions.
             # a0 - a7 for any pin mode
             # key is analog pin number and value is the digital mapping and current mode
             self.ad_pin_map = {0: {'mapped_pin': 12, 'pin_mode': None},
