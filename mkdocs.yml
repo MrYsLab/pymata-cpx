@@ -1,0 +1,28 @@
+site_name: pymata-cpx
+markdown_extensions:
+    - tables
+
+nav:
+      - Welcome: index.md
+      - What Is pymata-cpx?:
+        - The pymata-cpx Component: cpx.md
+        - The FirmataCPx: components.md
+      - Installallation:
+        - The pymata-cpx library: cpx_install.md
+        - The FirmataCPx Firmware: firmataCPx.md
+      - Usage:
+        - The Callback Philosophy: callbacks.md
+        - The API: api.md
+        - The Examples:
+            - Buttons and Switches: buttons.md
+            - Light Meter: light_meter.md
+            - Servo: servo.md
+            - The Clapper: clapper.md
+            - The Tapper: tapper.md
+            - Thermometer: temp.md
+            - Tilted: accel.md
+            - Touch Piano: touch.md
+
+
+
+theme: 'windmill'
