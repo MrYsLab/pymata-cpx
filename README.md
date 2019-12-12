@@ -1,5 +1,7 @@
 ![logo](https://github.com/MrYsLab/pymata-cpx/blob/master/docs/images/cpx.jpg)
 
+# THIS PROJECT IS UNDER CONSTRUCTION
+
 ## Control A Circuit Playground Express From Your PC With An Easy To Use Python 3 API
 
 It supports the following CPX devices:
