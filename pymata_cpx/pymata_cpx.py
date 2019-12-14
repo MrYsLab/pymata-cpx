@@ -46,19 +46,14 @@ logger = logging.getLogger(__name__)
 class PyMataCpx(object):
     """
     This class contains the complete set of API methods that permit control of the Circuit
-    Playground Express Micro-Controller utilizing the FirmatCPx sketch.
+    Playground Express Micro-Controller utilizing the FirmataCPx sketch.
 
     """
     # externally accessible entities that are shared by other components in this package
 
     _data_lock = threading.RLock()
     _command_deque = deque()
-
     _accel_usage = 0  # 0 = available, 1 = accel, 2 = tap
-
-    _servo_inuse = False  # False = not yet initialized, True = initialized
-
-    _sonar_configured = False
 
     # noinspection PyPep8Naming
     def __init__(self, verbose=True, exit_on_exception=True, com_port=None):
@@ -222,20 +217,18 @@ class PyMataCpx(object):
         """
         self._digital_write(13, 1)
 
-    def cpx_button_a_start(self, callback, debounce_time=.1):
+    def cpx_button_a_start(self, callback):
 
         """
         Enable button and report state changes in the callback.
 
         :param callback: a list of values described below.
 
-        :param debounce_time: switch debounce time default is .1 seconds
-
         Parameters sent to callback:
 
         [Digital Pin Type: 32, Pin Number: 4, switch value: 1 if pressed zero if released.]
         """
-        self._cpx_start_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL, callback, debounce_time)
+        self._cpx_start_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL, callback)
 
     def cpx_button_a_stop(self):
         """
@@ -243,14 +236,12 @@ class PyMataCpx(object):
         """
         self._cpx_stop_sensor(Constants.CPX_BUTTON_A, Constants.DIGITAL)
 
-    def cpx_button_b_start(self, callback, debounce_time=.1):
+    def cpx_button_b_start(self, callback):
 
         """
         Enable button and report state changes in the callback.
 
         :param callback: a list of values described below.
-
-        :param debounce_time: switch debounce time default is .1 seconds
 
         Parameters sent to callback:
 
@@ -258,7 +249,7 @@ class PyMataCpx(object):
 
         """
         self._cpx_start_sensor(Constants.CPX_BUTTON_B,
-                               Constants.DIGITAL, callback, debounce_time)
+                               Constants.DIGITAL, callback)
 
     def cpx_button_b_stop(self):
         """
@@ -281,8 +272,6 @@ class PyMataCpx(object):
         Parameters sent to callback:
 
         [Analog Pin Type: 2, Pin Number: 1-7, Touched: True or False, Raw data value]
-
-
         """
 
         assert input_pin in [1, 2, 3, 4, 5, 6, 7], \
@@ -352,7 +341,7 @@ class PyMataCpx(object):
         [Analog Pin Type: 2, Pin Number: 8, current_value]
 
         """
-        self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)
+        self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback)
 
     def cpx_light_sensor_stop(self):
         """
@@ -374,7 +363,7 @@ class PyMataCpx(object):
 
         """
         self._cpx_start_sensor(Constants.CPX_MICROPHONE,
-                               Constants.ANALOG, callback, None)
+                               Constants.ANALOG, callback)
 
     def cpx_microphone_stop(self):
         """
@@ -461,50 +450,22 @@ class PyMataCpx(object):
             if self._command_handler.digital_response_table[Constants.RESPONSE_TABLE_MODE] \
                     == Constants.PWM:
                 self._pwm_write(pin, 0)
-            elif self._command_handler.digital_response_table[Constants.RESPONSE_TABLE_MODE] \
-                    == Constants.SERVO:
-                self._pwm_write(pin, 0)
+
         self._command_handler.system_reset()
 
-    def cpx_set_servo_angle(self, angle):
-        """
-        Control an external servo connected to pin
-        A3. If calling this method repeatedly, must
-        include a sleep of .5 seconds between each
-        call.
-
-        :param angle: 0-180
-
-        """
-        # check angle range
-        assert 0 <= angle <= 180, 'Servo Angle must be between 0 and 180'
-
-        # get the digital pin number for A3
-        pin = self.ad_pin_map[3]['mapped_pin']
-
-        # only config the servo pin once
-        if not self._servo_inuse:
-            self._servo_inuse = True
-            self._servo_config(pin)
-
-        # set the angle
-        self._pwm_write(pin, angle)
-
-    def cpx_slide_switch_start(self, callback, debounce_time=.1):
+    def cpx_slide_switch_start(self, callback):
 
         """
         Enable button and report state changes in the callback
 
         :param callback: a list of values described below.
 
-        :param debounce_time: switch debounce time default is .1 seconds
-
         Parameters sent to callback:
 
         [Digital Pin Type: 32, Pin Number: 7, switch value: 1 switch on left side, 0 switch on right side]
         """
         self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
-                               Constants.DIGITAL, callback, debounce_time)
+                               Constants.DIGITAL, callback)
 
     def cpx_slide_switch_stop(self):
         """
@@ -609,7 +570,7 @@ class PyMataCpx(object):
             self._set_pin_mode(Constants.CPX_TEMPERATURE, Constants.INPUT,
                                Constants.ANALOG,
                                callback,
-                               self._command_handler._therm_handler, None)
+                               self._command_handler._therm_handler)
         except IndexError:
             raise
 
@@ -651,7 +612,6 @@ class PyMataCpx(object):
     def cpx_tone_off(self):
         """
         Stop all tone playback on the Circuit Playground board speaker.
-        :return:
         """
 
         self._command_handler.send_sysex(Constants.CP_COMMAND,
@@ -670,30 +630,25 @@ class PyMataCpx(object):
             data = self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_PREV_DATA_VALUE]
         return data
 
-    def _cpx_start_sensor(self, pin, pin_type, callback, debounce_time=None):
+    def _cpx_start_sensor(self, pin, pin_type, callback):
         """
         Start sensor streaming for dedicated sensors
         :param pin:
         :param pin_type: digital or analog
         :param callback:
-        :return:
         """
 
         if pin_type == Constants.DIGITAL:
             # get record for this pin
             the_record = self._command_handler.digital_response_table[pin]
             if the_record[Constants.RESPONSE_TABLE_MODE] is None:
-                self._set_pin_mode(pin, Constants.INPUT, Constants.DIGITAL, callback, None, debounce_time)
+                self._set_pin_mode(pin, Constants.INPUT, Constants.DIGITAL, callback, None)
 
-            # self._command_handler.digital_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
-            #     callback
             self._enable_digital_reporting(pin)
         else:
             the_record = self._command_handler.analog_response_table[pin]
             if the_record[Constants.RESPONSE_TABLE_MODE] is None:
-                self._set_pin_mode(pin, Constants.INPUT, Constants.ANALOG, callback, None, None)
-            # self._command_handler.analog_response_table[pin][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = \
-            #     callback
+                self._set_pin_mode(pin, Constants.INPUT, Constants.ANALOG, callback, None)
             self._enable_analog_reporting(pin)
 
     def _cpx_stop_sensor(self, pin, pin_type):
@@ -738,7 +693,6 @@ class PyMataCpx(object):
 
         :param value: pin value
 
-        :return: No return value
         """
         # The command value is not a fixed value, but needs to be calculated using the
         # pin's port number
@@ -767,7 +721,6 @@ class PyMataCpx(object):
 
         :param pin: Analog pin number. For example for A0, the number is 0.
 
-        :return: No return value
         """
         self._command_handler.analog_response_table[pin] = [None, None, 0, None, None, None]
 
@@ -781,7 +734,7 @@ class PyMataCpx(object):
         is disabled for all 8 bits in the "port" -
 
         :param pin: Pin and all pins for this port
-        :return: No return value
+
         """
         self._command_handler.digital_response_table[pin] = [None, None, 0, None, None, None]
 
@@ -798,7 +751,7 @@ class PyMataCpx(object):
 
         :param pin: Analog pin number. For example for A0, the number is 0.
 
-        :return: No return value
+
         """
 
         command = [Constants.REPORT_ANALOG + pin, Constants.REPORTING_ENABLE]
@@ -811,7 +764,6 @@ class PyMataCpx(object):
 
         :param pin: Pin and all pins for this port
 
-        :return: No return value
         """
         port = pin // 8
         command = [Constants.REPORT_DIGITAL + port, Constants.REPORTING_ENABLE]
@@ -832,7 +784,7 @@ class PyMataCpx(object):
         The user expresses all pins using their A number.
         Translate a digital pin number to its analog equivalent.
         :param pin:
-        :return: analog pin number
+
         """
         if pin in self.ad_pin_map:
             return self.ad_pin_map[pin]['mapped_pin']
@@ -854,7 +806,7 @@ class PyMataCpx(object):
         else:
             self._extended_analog(pin, value)
 
-    def _set_pin_mode(self, pin, mode, pin_type, cb_external=None, cb_internal=None, debounce_time=None):
+    def _set_pin_mode(self, pin, mode, pin_type, cb_external=None, cb_internal=None):
         """
         This method sets a pin to the desired pin mode for the pin_type.
         It automatically enables data reporting.
@@ -870,7 +822,6 @@ class PyMataCpx(object):
         :param cb_internal: used by cpx type functions call back routine
 
 
-        :return: No return value
         """
 
         if mode == Constants.INPUT and pin_type == Constants.ANALOG:
@@ -921,25 +872,6 @@ class PyMataCpx(object):
 
         :param interval: Integer value for desired sampling interval in milliseconds
 
-        :return: No return value.
         """
         data = [interval & 0x7f, (interval >> 7) & 0x7f]
         self._command_handler.send_sysex(Constants.SAMPLING_INTERVAL, data)
-
-    def _servo_config(self, pin, min_pulse=544, max_pulse=2400):
-        """
-        Configure a pin as a servo pin. Set pulse min, max in ms.
-
-        :param pin: Servo Pin.
-
-        :param min_pulse: Min pulse width in ms.
-
-        :param max_pulse: Max pulse width in ms.
-
-        :return: No return value
-        """
-        self._set_pin_mode(pin, Constants.SERVO, Constants.OUTPUT)
-        command = [pin, min_pulse & 0x7f, (min_pulse >> 7) & 0x7f,
-                   max_pulse & 0x7f, (max_pulse >> 7) & 0x7f]
-
-        self._command_handler.send_sysex(Constants.SERVO_CONFIG, command)

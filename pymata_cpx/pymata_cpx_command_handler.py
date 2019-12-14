@@ -28,7 +28,6 @@ try:
 except ImportError:
     from .constants import Constants
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -164,7 +163,7 @@ class PyMataCpxCommandHandler(threading.Thread):
             value = pin_response_data_data[Constants.RESPONSE_TABLE_PREV_DATA_VALUE]
             # check to see if there is a callback function attached to this pin
             if self.analog_response_table[data[Constants.RESPONSE_TABLE_MODE]][
-                    Constants.RESPONSE_TABLE_CALLBACK_INTERNAL]:
+                Constants.RESPONSE_TABLE_CALLBACK_INTERNAL]:
                 callback = self.analog_response_table[data[Constants.RESPONSE_TABLE_MODE]][
                     Constants.RESPONSE_TABLE_CALLBACK_INTERNAL]
             else:
@@ -304,11 +303,14 @@ class PyMataCpxCommandHandler(threading.Thread):
 
         temp_c = self._therm_value_to_temp(raw)
         # Call any user callback
-        if self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
-            if self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] != temp_c:
+        if self.analog_response_table[Constants.CPX_TEMPERATURE][
+            Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
+            if self.analog_response_table[Constants.CPX_TEMPERATURE][
+                Constants.RESPONSE_TABLE_PREV_DATA_VALUE] != temp_c:
                 self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = temp_c
                 self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]([2,
-                                                                                                                   Constants.CPX_TEMPERATURE, temp_c])
+                                                                                                                   Constants.CPX_TEMPERATURE,
+                                                                                                                   temp_c])
         time.sleep(.01)
 
     def _therm_value_to_temp(self, adc_value):
@@ -342,7 +344,6 @@ class PyMataCpxCommandHandler(threading.Thread):
 
         return steinhart
 
-
     def cp_response_handler(self, data):
         """Callback invoked when a circuit playground sysex command is received.
         """
@@ -361,7 +362,7 @@ class PyMataCpxCommandHandler(threading.Thread):
             y = self._parse_firmata_float(data[10:18])
             z = self._parse_firmata_float(data[18:26])
             if self.digital_response_table[Constants.ACCEL_PSEUDO_PIN][
-                    Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
+                Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
                 self.digital_response_table[Constants.ACCEL_PSEUDO_PIN][
                     Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]([Constants.DIGITAL,
                                                                  Constants.ACCEL_PSEUDO_PIN,
@@ -373,7 +374,7 @@ class PyMataCpxCommandHandler(threading.Thread):
                 return
             tap = self._parse_firmata_byte(data[2:4])
             if self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
-                    Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
+                Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
                 taps = list(self._tap_register_to_clicks(tap))
                 if self.digital_response_table[Constants.ACCEL_TAP_PSEUDO_PIN][
                     Constants.RESPONSE_TABLE_PREV_DATA_VALUE] != taps:

@@ -72,7 +72,6 @@ class PyMataCpxSerial(threading.Thread):
                 if self.pymata.exit_on_exception:
                     sys.exit(0)
 
-
         self.cpx = serial.Serial(self.com_port, 115200,
                                  timeout=1, writeTimeout=0)
 
