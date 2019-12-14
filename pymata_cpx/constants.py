@@ -160,8 +160,8 @@ class Constants:
     ACCEL_USAGE_AVAILABLE = 0  # accel not in use
     ACCEL_USAGE_ACCEL = 1  # accel is being used as an accelerometer
     ACCEL_USAGE_TAP = 2  # accel is being used as a tap detector
-    ACCEL_PSEUDO_PIN = 27  # to store info in analog
-    ACCEL_TAP_PSEUDO_PIN = 28 # store tap data separately
+    ACCEL_PSEUDO_PIN = 11  # to store info in analog
+    ACCEL_TAP_PSEUDO_PIN = 12 # store tap data separately
 
     # These values are the index into the data passed by firmata and used to reassemble integer values
     MSB = 2
@@ -194,9 +194,9 @@ class Constants:
     """
     # Dedicated cpx sensor pin numbers and mapped to pin type in
     # the command handler
-    CPX_MICROPHONE = 4  # this is internally mapped by .ino sketch
-    CPX_TEMPERATURE = 0 # this is analog
+    CPX_MICROPHONE = 10  # this is a virtual pin
+    CPX_TEMPERATURE = 9 # this is analog
     CPX_BUTTON_A = 4  # this is digital
-    CPX_BUTTON_B = 19  # this is digital
-    CPX_SLIDE_SWITCH = 21  # this is digital
-    CPX_LIGHT_SENSOR = 5  # this is analog
+    CPX_BUTTON_B = 5  # this is digital
+    CPX_SLIDE_SWITCH = 7  # this is digital
+    CPX_LIGHT_SENSOR = 8  # this is analog

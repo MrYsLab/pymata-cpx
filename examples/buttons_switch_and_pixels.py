@@ -44,8 +44,8 @@ All switches share a common callback function.
 
 # pin numbers for each switch
 button_a = 4
-button_b = 19
-slide = 21
+button_b = 5
+slide = 7
 
 # index into data in the callback
 switch_id = 1

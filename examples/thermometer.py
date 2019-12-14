@@ -93,7 +93,7 @@ class Thermometer:
         # save the temperature the first time
         # through as ambient
         if not self.ambient:
-            self.ambient = data[2]
+            self.ambient = the_current_temperature
 
         # select the pixel based on the current temperature
         if self.ambient < the_current_temperature < (self.ambient + .6):
@@ -135,8 +135,8 @@ class Thermometer:
             self.p.cpx_pixels_show()
             self.last_pixel_used = pixel
 
-        print('ambient: {} current: {} pixel{}'.format(self.ambient,
-                                                       the_current_temperature,
+        print('ambient: {} current: {} pixel{}'.format(round(self.ambient, 3),
+                                                       round(the_current_temperature, 3),
                                                        pixel))
 
 

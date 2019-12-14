@@ -96,7 +96,7 @@ class PyMataCpxCommandHandler(threading.Thread):
         self.total_pins_discovered = 30
 
         # total number of analog pins for the discovered board
-        self.number_of_analog_pins_discovered = 12
+        self.number_of_analog_pins_discovered = 30
 
         self.digital_response_table = []
 
@@ -170,11 +170,11 @@ class PyMataCpxCommandHandler(threading.Thread):
             else:
                 callback = self.analog_response_table[data[Constants.RESPONSE_TABLE_MODE]][
                     Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]
-        # send the pin mode, pin number, and current data value
-        if callback is not None:
-            if value != previous_value:
-                # has the value changed since the last report
-                callback([Constants.ANALOG, pin, value])
+            # send the pin mode, pin number, and current data value
+            if callback is not None:
+                if value != previous_value:
+                    # has the value changed since the last report
+                    callback([Constants.ANALOG, pin, value])
 
     def digital_message(self, data):
         """
@@ -304,36 +304,44 @@ class PyMataCpxCommandHandler(threading.Thread):
 
         temp_c = self._therm_value_to_temp(raw)
         # Call any user callback
-        if self.analog_response_table[0][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
-            if self.analog_response_table[0][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] != temp_c:
-                self.analog_response_table[0][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = temp_c
-                self.analog_response_table[0][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]([2, 0, temp_c])
+        if self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] is not None:
+            if self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] != temp_c:
+                self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_PREV_DATA_VALUE] = temp_c
+                self.analog_response_table[Constants.CPX_TEMPERATURE][Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL]([2,
+                                                                                                                   Constants.CPX_TEMPERATURE, temp_c])
+        time.sleep(.01)
 
     def _therm_value_to_temp(self, adc_value):
         """
         Convert a thermistor ADC value to a temperature in Celsius.
         Use Steinhart-Hart thermistor equation to convert thermistor resistance to
-        temperature.  See: https://learn.adafruit.com/thermistor/overview
-        Handle a zero value which has no meaning (and would cause a divide by zero).
+        temperature.
+        See: https://github.com/adafruit/Adafruit_CircuitPython_Thermistor/blob/master/adafruit_thermistor.py
 
         :param thermistor adc_value:
-        :return:
+
+        :return degrees c
         """
 
-        if adc_value:
-            # First calculate the resistance of the thermistor based on its ADC value.
-            resistance = ((1023.0 * Constants.THERM_SERIES_OHMS) / adc_value)
-            resistance -= Constants.THERM_SERIES_OHMS
-            # Now apply Steinhart-Hart equation.
-            steinhart = resistance / Constants.THERM_NOMINAL_OHMS
-            steinhart = math.log(steinhart)
-            steinhart /= Constants.THERM_BETA
-            steinhart += 1.0 / (Constants.THERM_NOMINAL_C + 273.15)
-            steinhart = 1.0 / steinhart
-            steinhart -= 273.15
-        else:
-            steinhart = 0.0
+        series_resistor = 10000.0
+        nominal_resistance = 10000.0
+        nominal_temperature = 25.0
+        b_coefficient = 3950.0
+
+        # reading = adc_value / 64
+        # reading = (1023 * series_resistor) / reading
+        reading = (1023 * series_resistor) / adc_value
+        reading -= series_resistor
+
+        steinhart = reading / nominal_resistance  # (R/Ro)
+        steinhart = math.log(steinhart)  # ln(R/Ro)
+        steinhart /= b_coefficient  # 1/B * ln(R/Ro)
+        steinhart += 1.0 / (nominal_temperature + 273.15)  # + (1/To)
+        steinhart = 1.0 / steinhart  # Invert
+        steinhart -= 273.15  # convert to C
+
         return steinhart
+
 
     def cp_response_handler(self, data):
         """Callback invoked when a circuit playground sysex command is received.

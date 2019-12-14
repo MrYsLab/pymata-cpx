@@ -184,7 +184,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 27, x_value, y_value, z_value]
+        [Digital Pin Type: 32, Pin Number: 11, x_value, y_value, z_value]
 
         """
         assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, 'TAP In Use'
@@ -254,7 +254,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 19, switch value: 1 if pressed zero if released.]
+        [Digital Pin Type: 32, Pin Number: 5, switch value: 1 if pressed zero if released.]
 
         """
         self._cpx_start_sensor(Constants.CPX_BUTTON_B,
@@ -349,7 +349,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 5, current_value]
+        [Analog Pin Type: 2, Pin Number: 8, current_value]
 
         """
         self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)
@@ -370,7 +370,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 4, current_value]
+        [Analog Pin Type: 2, Pin Number: 10, current_value]
 
         """
         self._cpx_start_sensor(Constants.CPX_MICROPHONE,
@@ -501,7 +501,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]
+        [Digital Pin Type: 32, Pin Number: 7, switch value: 1 switch on left side, 0 switch on right side]
         """
         self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
                                Constants.DIGITAL, callback, debounce_time)
@@ -563,7 +563,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 27,
+        [Digital Pin Type: 32, Pin Number: 12,
         single_tap: True or False, double_tap: True or False]
 
         """
@@ -602,11 +602,11 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 0, temperature in degrees C]
+        [Analog Pin Type: 2, Pin Number: 9, temperature in degrees C]
 
         """
         try:
-            self._set_pin_mode(0, Constants.INPUT,
+            self._set_pin_mode(Constants.CPX_TEMPERATURE, Constants.INPUT,
                                Constants.ANALOG,
                                callback,
                                self._command_handler._therm_handler, None)
@@ -618,9 +618,9 @@ class PyMataCpx(object):
         Stop streaming temperature data from the thermistor.
         """
         with self._data_lock:
-            self._command_handler.digital_response_table[0][
+            self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
                 Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
-            self._command_handler.digital_response_table[0][
+            self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
                 Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = None
         self._disable_analog_reporting(0)
 

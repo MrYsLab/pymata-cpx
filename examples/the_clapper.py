@@ -67,7 +67,7 @@ class TheClapper:
                      data[1] = pin attached to mic- pin 4
                      data[3] = readings from microphone
         """
-        if data[2] > 800:
+        if data[2] > 600:
             # self.p.cpx_pixels_clear()
             # self.p.cpx_pixels_show()
             self.go = not self.go
