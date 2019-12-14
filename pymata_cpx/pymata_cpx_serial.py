@@ -65,9 +65,9 @@ class PyMataCpxSerial(threading.Thread):
                     continue
             if self.com_port is None:
                 if self.pymata.verbose:
-                    print('CPE Not Found')
+                    print('CPX Not Found')
                 else:
-                    logger.warning('CPE Not Found')
+                    logger.warning('CPX Not Found')
 
                 if self.pymata.exit_on_exception:
                     sys.exit(0)

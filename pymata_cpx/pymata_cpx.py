@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 class PyMataCpx(object):
     """
     This class contains the complete set of API methods that permit control of the Circuit
-    Playground Express Micro-Controller utilizing Firmata or its derivatives.
+    Playground Express Micro-Controller utilizing the FirmatCPx sketch.
 
     """
     # externally accessible entities that are shared by other components in this package

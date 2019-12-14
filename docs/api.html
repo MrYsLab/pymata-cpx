@@ -64,9 +64,20 @@ import threading
 import time
 from collections import deque
 
-from pymata_cpx_command_handler import PyMataCpxCommandHandler
-from pymata_cpx_serial import PyMataCpxSerial
-from constants import Constants
+try:
+    from pymata_cpx_command_handler import PyMataCpxCommandHandler
+except ImportError:
+    from .pymata_cpx_command_handler import PyMataCpxCommandHandler
+
+try:
+    from pymata_cpx_serial import PyMataCpxSerial
+except ImportError:
+    from .pymata_cpx_serial import PyMataCpxSerial
+
+try:
+    from constants import Constants
+except ImportError:
+    from .constants import Constants
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +101,7 @@ class PyMataCpx(object):
     _sonar_configured = False
 
     # noinspection PyPep8Naming
-    def __init__(self, verbose=True, exit_on_exception=True):
+    def __init__(self, verbose=True, exit_on_exception=True, com_port=None):
         &#34;&#34;&#34;
         The &#34;constructor&#34; instantiates the entire interface. It starts the operational threads for the serial
         interface as well as for the command handler.
@@ -98,6 +109,8 @@ class PyMataCpx(object):
         :param verbose: Set to False to suppress output to screen
 
         :param exit_on_exception: Set to False to suppress exiting on exception
+
+        :param com_port: User specified com port
         &#34;&#34;&#34;
 
         try:
@@ -105,7 +118,8 @@ class PyMataCpx(object):
             self.verbose = verbose
             self.exit_on_exception = exit_on_exception
 
-            # create an analog to digital pin map so that analog pin numbers
+            # Create an analog to digital pin map so that analog pin numbers
+            # may be used for all functions.
             # a0 - a7 for any pin mode
             # key is analog pin number and value is the digital mapping and current mode
             self.ad_pin_map = {0: {&#39;mapped_pin&#39;: 12, &#39;pin_mode&#39;: None},
@@ -124,12 +138,12 @@ class PyMataCpx(object):
             self._accel_usage = Constants.ACCEL_USAGE_AVAILABLE
 
             if verbose:
-                print(&#39;\npymata-cpx version 1.00  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
+                print(&#39;\npymata-cpx version 1.0  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
             else:
-                logger.info(&#39;pymata-cpx version 1.00  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
+                logger.info(&#39;pymata-cpx version 1.0  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
 
             # Instantiate the serial support class
-            self.transport = PyMataCpxSerial(self)
+            self.transport = PyMataCpxSerial(self, com_port)
 
             # Start the data receive thread
             self.transport.start()
@@ -210,7 +224,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 27, x_value, y_value, z_value]
+        [Digital Pin Type: 32, Pin Number: 11, x_value, y_value, z_value]
 
         &#34;&#34;&#34;
         assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, &#39;TAP In Use&#39;
@@ -280,7 +294,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 19, switch value: 1 if pressed zero if released.]
+        [Digital Pin Type: 32, Pin Number: 5, switch value: 1 if pressed zero if released.]
 
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_BUTTON_B,
@@ -375,7 +389,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 5, current_value]
+        [Analog Pin Type: 2, Pin Number: 8, current_value]
 
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)
@@ -396,7 +410,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 4, current_value]
+        [Analog Pin Type: 2, Pin Number: 10, current_value]
 
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_MICROPHONE,
@@ -527,7 +541,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]
+        [Digital Pin Type: 32, Pin Number: 7, switch value: 1 switch on left side, 0 switch on right side]
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
                                Constants.DIGITAL, callback, debounce_time)
@@ -589,7 +603,7 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 27,
+        [Digital Pin Type: 32, Pin Number: 12,
         single_tap: True or False, double_tap: True or False]
 
         &#34;&#34;&#34;
@@ -628,11 +642,11 @@ class PyMataCpx(object):
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 0, temperature in degrees C]
+        [Analog Pin Type: 2, Pin Number: 9, temperature in degrees C]
 
         &#34;&#34;&#34;
         try:
-            self._set_pin_mode(0, Constants.INPUT,
+            self._set_pin_mode(Constants.CPX_TEMPERATURE, Constants.INPUT,
                                Constants.ANALOG,
                                callback,
                                self._command_handler._therm_handler, None)
@@ -644,9 +658,9 @@ class PyMataCpx(object):
         Stop streaming temperature data from the thermistor.
         &#34;&#34;&#34;
         with self._data_lock:
-            self._command_handler.digital_response_table[0][
+            self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
                 Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
-            self._command_handler.digital_response_table[0][
+            self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
                 Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = None
         self._disable_analog_reporting(0)
 
@@ -656,7 +670,7 @@ class PyMataCpx(object):
         duration (in milliseconds) using the Circuit Playground board speaker.
         Both frequency and duration can be at most 16,384.  Duration is optional
         and if not specified the tone will continue to play forever (or until
-        no_tone is called).
+        cpx_tone_off is called).
 
         :param frequency_hz:
 
@@ -982,7 +996,7 @@ class PyMataCpx(object):
 <dl>
 <dt id="pymata_cpx.PyMataCpx"><code class="flex name class">
 <span>class <span class="ident">PyMataCpx</span></span>
-<span>(</span><span>verbose=True, exit_on_exception=True)</span>
+<span>(</span><span>verbose=True, exit_on_exception=True, com_port=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>This class contains the complete set of API methods that permit control of the Circuit
@@ -990,7 +1004,8 @@ Playground Express Micro-Controller utilizing Firmata or its derivatives.</p>
 <p>The "constructor" instantiates the entire interface. It starts the operational threads for the serial
 interface as well as for the command handler.</p>
 <p>:param verbose: Set to False to suppress output to screen</p>
-<p>:param exit_on_exception: Set to False to suppress exiting on exception</p></section>
+<p>:param exit_on_exception: Set to False to suppress exiting on exception</p>
+<p>:param com_port: User specified com port</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class PyMataCpx(object):
@@ -1011,7 +1026,7 @@ interface as well as for the command handler.</p>
     _sonar_configured = False
 
     # noinspection PyPep8Naming
-    def __init__(self, verbose=True, exit_on_exception=True):
+    def __init__(self, verbose=True, exit_on_exception=True, com_port=None):
         &#34;&#34;&#34;
         The &#34;constructor&#34; instantiates the entire interface. It starts the operational threads for the serial
         interface as well as for the command handler.
@@ -1019,6 +1034,8 @@ interface as well as for the command handler.</p>
         :param verbose: Set to False to suppress output to screen
 
         :param exit_on_exception: Set to False to suppress exiting on exception
+
+        :param com_port: User specified com port
         &#34;&#34;&#34;
 
         try:
@@ -1026,7 +1043,8 @@ interface as well as for the command handler.</p>
             self.verbose = verbose
             self.exit_on_exception = exit_on_exception
 
-            # create an analog to digital pin map so that analog pin numbers
+            # Create an analog to digital pin map so that analog pin numbers
+            # may be used for all functions.
             # a0 - a7 for any pin mode
             # key is analog pin number and value is the digital mapping and current mode
             self.ad_pin_map = {0: {&#39;mapped_pin&#39;: 12, &#39;pin_mode&#39;: None},
@@ -1045,12 +1063,12 @@ interface as well as for the command handler.</p>
             self._accel_usage = Constants.ACCEL_USAGE_AVAILABLE
 
             if verbose:
-                print(&#39;\npymata-cpx version 1.00  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
+                print(&#39;\npymata-cpx version 1.0  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
             else:
-                logger.info(&#39;pymata-cpx version 1.00  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
+                logger.info(&#39;pymata-cpx version 1.0  Copyright(C) 2019 Alan Yorinks    All rights reserved.&#39;)
 
             # Instantiate the serial support class
-            self.transport = PyMataCpxSerial(self)
+            self.transport = PyMataCpxSerial(self, com_port)
 
             # Start the data receive thread
             self.transport.start()
@@ -1131,7 +1149,7 @@ interface as well as for the command handler.</p>
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 27, x_value, y_value, z_value]
+        [Digital Pin Type: 32, Pin Number: 11, x_value, y_value, z_value]
 
         &#34;&#34;&#34;
         assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, &#39;TAP In Use&#39;
@@ -1201,7 +1219,7 @@ interface as well as for the command handler.</p>
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 19, switch value: 1 if pressed zero if released.]
+        [Digital Pin Type: 32, Pin Number: 5, switch value: 1 if pressed zero if released.]
 
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_BUTTON_B,
@@ -1296,7 +1314,7 @@ interface as well as for the command handler.</p>
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 5, current_value]
+        [Analog Pin Type: 2, Pin Number: 8, current_value]
 
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)
@@ -1317,7 +1335,7 @@ interface as well as for the command handler.</p>
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 4, current_value]
+        [Analog Pin Type: 2, Pin Number: 10, current_value]
 
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_MICROPHONE,
@@ -1448,7 +1466,7 @@ interface as well as for the command handler.</p>
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]
+        [Digital Pin Type: 32, Pin Number: 7, switch value: 1 switch on left side, 0 switch on right side]
         &#34;&#34;&#34;
         self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
                                Constants.DIGITAL, callback, debounce_time)
@@ -1510,7 +1528,7 @@ interface as well as for the command handler.</p>
 
         Parameters sent to callback:
 
-        [Digital Pin Type: 32, Pin Number: 27,
+        [Digital Pin Type: 32, Pin Number: 12,
         single_tap: True or False, double_tap: True or False]
 
         &#34;&#34;&#34;
@@ -1549,11 +1567,11 @@ interface as well as for the command handler.</p>
 
         Parameters sent to callback:
 
-        [Analog Pin Type: 2, Pin Number: 0, temperature in degrees C]
+        [Analog Pin Type: 2, Pin Number: 9, temperature in degrees C]
 
         &#34;&#34;&#34;
         try:
-            self._set_pin_mode(0, Constants.INPUT,
+            self._set_pin_mode(Constants.CPX_TEMPERATURE, Constants.INPUT,
                                Constants.ANALOG,
                                callback,
                                self._command_handler._therm_handler, None)
@@ -1565,9 +1583,9 @@ interface as well as for the command handler.</p>
         Stop streaming temperature data from the thermistor.
         &#34;&#34;&#34;
         with self._data_lock:
-            self._command_handler.digital_response_table[0][
+            self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
                 Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
-            self._command_handler.digital_response_table[0][
+            self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
                 Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = None
         self._disable_analog_reporting(0)
 
@@ -1577,7 +1595,7 @@ interface as well as for the command handler.</p>
         duration (in milliseconds) using the Circuit Playground board speaker.
         Both frequency and duration can be at most 16,384.  Duration is optional
         and if not specified the tone will continue to play forever (or until
-        no_tone is called).
+        cpx_tone_off is called).
 
         :param frequency_hz:
 
@@ -1946,7 +1964,7 @@ call the provided callback with accelerometer data. You may not
 use the device in both accelerometer and tap mode at the same time.</p>
 <p>:param callback: a list of values described below.</p>
 <p>Parameters sent to callback:</p>
-<p>[Digital Pin Type: 32, Pin Number: 27, x_value, y_value, z_value]</p></section>
+<p>[Digital Pin Type: 32, Pin Number: 11, x_value, y_value, z_value]</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def cpx_accel_start(self, callback):
@@ -1959,7 +1977,7 @@ use the device in both accelerometer and tap mode at the same time.</p>
 
     Parameters sent to callback:
 
-    [Digital Pin Type: 32, Pin Number: 27, x_value, y_value, z_value]
+    [Digital Pin Type: 32, Pin Number: 11, x_value, y_value, z_value]
 
     &#34;&#34;&#34;
     assert self._accel_usage == Constants.ACCEL_USAGE_AVAILABLE, &#39;TAP In Use&#39;
@@ -2071,7 +2089,7 @@ use the device in both accelerometer and tap mode at the same time.</p>
 <p>:param callback: a list of values described below.</p>
 <p>:param debounce_time: switch debounce time default is .1 seconds</p>
 <p>Parameters sent to callback:</p>
-<p>[Digital Pin Type: 32, Pin Number: 19, switch value: 1 if pressed zero if released.]</p></section>
+<p>[Digital Pin Type: 32, Pin Number: 5, switch value: 1 if pressed zero if released.]</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def cpx_button_b_start(self, callback, debounce_time=.1):
@@ -2085,7 +2103,7 @@ use the device in both accelerometer and tap mode at the same time.</p>
 
     Parameters sent to callback:
 
-    [Digital Pin Type: 32, Pin Number: 19, switch value: 1 if pressed zero if released.]
+    [Digital Pin Type: 32, Pin Number: 5, switch value: 1 if pressed zero if released.]
 
     &#34;&#34;&#34;
     self._cpx_start_sensor(Constants.CPX_BUTTON_B,
@@ -2228,7 +2246,7 @@ reset the circuit playground and exit.</p></section>
 its value in the callback.</p>
 <p>:param callback:a list of values described below.</p>
 <p>Parameters sent to callback:</p>
-<p>[Analog Pin Type: 2, Pin Number: 5, current_value]</p></section>
+<p>[Analog Pin Type: 2, Pin Number: 8, current_value]</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def cpx_light_sensor_start(self, callback):
@@ -2240,7 +2258,7 @@ its value in the callback.</p>
 
     Parameters sent to callback:
 
-    [Analog Pin Type: 2, Pin Number: 5, current_value]
+    [Analog Pin Type: 2, Pin Number: 8, current_value]
 
     &#34;&#34;&#34;
     self._cpx_start_sensor(Constants.CPX_LIGHT_SENSOR, Constants.ANALOG, callback, None)</code></pre>
@@ -2269,7 +2287,7 @@ its value in the callback.</p>
 its value in the callback.</p>
 <p>:param callback: a list of values described below.</p>
 <p>Parameters sent to callback:</p>
-<p>[Analog Pin Type: 2, Pin Number: 4, current_value]</p></section>
+<p>[Analog Pin Type: 2, Pin Number: 10, current_value]</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def cpx_microphone_start(self, callback):
@@ -2281,7 +2299,7 @@ its value in the callback.</p>
 
     Parameters sent to callback:
 
-    [Analog Pin Type: 2, Pin Number: 4, current_value]
+    [Analog Pin Type: 2, Pin Number: 10, current_value]
 
     &#34;&#34;&#34;
     self._cpx_start_sensor(Constants.CPX_MICROPHONE,
@@ -2492,7 +2510,7 @@ call.</p>
 <p>:param callback: a list of values described below.</p>
 <p>:param debounce_time: switch debounce time default is .1 seconds</p>
 <p>Parameters sent to callback:</p>
-<p>[Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]</p></section>
+<p>[Digital Pin Type: 32, Pin Number: 7, switch value: 1 switch on left side, 0 switch on right side]</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def cpx_slide_switch_start(self, callback, debounce_time=.1):
@@ -2506,7 +2524,7 @@ call.</p>
 
     Parameters sent to callback:
 
-    [Digital Pin Type: 32, Pin Number: 21, switch value: 1 switch on left side, 0 switch on right side]
+    [Digital Pin Type: 32, Pin Number: 7, switch value: 1 switch on left side, 0 switch on right side]
     &#34;&#34;&#34;
     self._cpx_start_sensor(Constants.CPX_SLIDE_SWITCH,
                            Constants.DIGITAL, callback, debounce_time)</code></pre>
@@ -2617,7 +2635,7 @@ provided callback with tap data. You may not
 use the device in both accelerometer and tap mode at the same time.</p>
 <p>:param callback: a list of values described below.</p>
 <p>Parameters sent to callback:</p>
-<p>[Digital Pin Type: 32, Pin Number: 27,
+<p>[Digital Pin Type: 32, Pin Number: 12,
 single_tap: True or False, double_tap: True or False]</p></section>
 <details class="source">
 <summary>Source code</summary>
@@ -2632,7 +2650,7 @@ single_tap: True or False, double_tap: True or False]</p></section>
 
     Parameters sent to callback:
 
-    [Digital Pin Type: 32, Pin Number: 27,
+    [Digital Pin Type: 32, Pin Number: 12,
     single_tap: True or False, double_tap: True or False]
 
     &#34;&#34;&#34;
@@ -2679,7 +2697,7 @@ The callback should take two arguments,
 the temperature in celsius, and the raw ADC value of the thermistor.</p>
 <p>:param callback: a list of values described below.</p>
 <p>Parameters sent to callback:</p>
-<p>[Analog Pin Type: 2, Pin Number: 0, temperature in degrees C]</p></section>
+<p>[Analog Pin Type: 2, Pin Number: 9, temperature in degrees C]</p></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def cpx_temperature_start(self, callback):
@@ -2692,11 +2710,11 @@ the temperature in celsius, and the raw ADC value of the thermistor.</p>
 
     Parameters sent to callback:
 
-    [Analog Pin Type: 2, Pin Number: 0, temperature in degrees C]
+    [Analog Pin Type: 2, Pin Number: 9, temperature in degrees C]
 
     &#34;&#34;&#34;
     try:
-        self._set_pin_mode(0, Constants.INPUT,
+        self._set_pin_mode(Constants.CPX_TEMPERATURE, Constants.INPUT,
                            Constants.ANALOG,
                            callback,
                            self._command_handler._therm_handler, None)
@@ -2716,9 +2734,9 @@ the temperature in celsius, and the raw ADC value of the thermistor.</p>
     Stop streaming temperature data from the thermistor.
     &#34;&#34;&#34;
     with self._data_lock:
-        self._command_handler.digital_response_table[0][
+        self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
             Constants.RESPONSE_TABLE_CALLBACK_EXTERNAL] = None
-        self._command_handler.digital_response_table[0][
+        self._command_handler.digital_response_table[Constants.CPX_TEMPERATURE][
             Constants.RESPONSE_TABLE_CALLBACK_INTERNAL] = None
     self._disable_analog_reporting(0)</code></pre>
 </details>
@@ -2732,7 +2750,7 @@ duration (in milliseconds) using the Circuit Playground board speaker.
 Both frequency and duration can be at most 16,384.
 Duration is optional
 and if not specified the tone will continue to play forever (or until
-no_tone is called).</p>
+cpx_tone_off is called).</p>
 <p>:param frequency_hz:</p>
 <p>:param duration_ms:</p></section>
 <details class="source">
@@ -2743,7 +2761,7 @@ no_tone is called).</p>
     duration (in milliseconds) using the Circuit Playground board speaker.
     Both frequency and duration can be at most 16,384.  Duration is optional
     and if not specified the tone will continue to play forever (or until
-    no_tone is called).
+    cpx_tone_off is called).
 
     :param frequency_hz:
 
