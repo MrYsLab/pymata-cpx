@@ -4,9 +4,9 @@ markdown_extensions:
 
 nav:
       - Welcome: index.md
-      - The Backstory:
-        - The pymata-cpx Component: cpx.md
-        - The FirmataCPx: components.md
+      - What Is pymata-cpx?:
+        - The pymata-cpx API Library: cpx.md
+        - The FirmataCPx Firmware: components.md
       - Installallation:
         - The pymata-cpx library: cpx_install.md
         - The FirmataCPx Firmware: firmataCPx.md
