@@ -32,7 +32,7 @@ All the *start* methods require that you provide a callback method.
 When the sensor changes value, the callback is invoked with information about the 
 change. More about this in a moment.
 
-If you no longer wish to receive change notifications, one would call the *stop* method for the sensor.
+If you no longer wish to receive change notifications, call the *stop* method for the sensor.
 Continuing with using Button B as an example, to discontinue Button B from sending value change
 notifications, call:
 
@@ -124,7 +124,6 @@ callback list.
 
 ##Pin Numbers
 Here are the pin numbers you would expect to see in the callback data list for each of the sensor types.
-Notice that pin numbers are unique across both digital and analog sensors.
 
 
 ### Digital Inputs
@@ -139,10 +138,10 @@ Notice that pin numbers are unique across both digital and analog sensors.
 ### Analog Inputs
 | Analog Pin Number 	|    Sensor    	|
 |------------------	|------------	|
-|          1 - 7         	|   Touch |
+|          1 - 7         	|   Touchpad |
 |          8         	|   Light |
 |              9     	|   Temperature | 
-|          10         	|   Microphone |
+|          10         	|   Sound |
 |          11         	|   Accelerometer |
 
 
