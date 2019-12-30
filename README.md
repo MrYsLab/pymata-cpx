@@ -2,6 +2,8 @@
 
 ## Control A Circuit Playground Express From Your PC With An Easy To Use Python 3 API
 
+View the Installation and Usage Guide [Here.](https://mryslab.github.io/pymata-cpx/)
+
 It supports the following CPX devices:
 * The Buttons and Slide Switch.
 * The D13 Board LED.
