@@ -1,18 +1,14 @@
-site_name: pymata-cpx
+site_name: pymata-cpx and FirmataCPx
 markdown_extensions:
     - tables
 
 nav:
       - Welcome: index.md
-      - What Is pymata-cpx?:
-        - The pymata-cpx Component: cpx.md
-        - The FirmataCPx: components.md
-      - Installallation:
-        - The pymata-cpx library: cpx_install.md
-        - The FirmataCPx Firmware: firmataCPx.md
+      - The Client Library and Host Firmware:
+        - The pymata-cpx Client Library: client.md
+        - The FirmataCPx Host Firmware: firmware.md
       - Usage:
-        - The Callback Philosophy: callbacks.md
-        - The API: api.md
+        - The pymata-cpx API: callbacks.md
         - The Examples:
             - Buttons and Switches: buttons.md
             - Light Meter: light_meter.md
