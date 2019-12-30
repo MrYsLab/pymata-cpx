@@ -14,7 +14,6 @@ It supports the following CPX devices:
 * The light sensor.
 * The sound sensor.
 * Touchpad sensors.
-* Servo motor (externally connected).
 
 An example to animate the neopixels and to start and stop the animation
 by simply tapping the Playground Express:
