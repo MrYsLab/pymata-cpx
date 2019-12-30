@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    
+    <link rel="shortcut icon" href="../img/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>The FirmataCPx Host Firmware - pymata-cpx and FirmataCPx</title>
+    <link href="../css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="../css/font-awesome-4.7.0.css" rel="stylesheet">
+    <link href="../css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/highlight.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../js/jquery-3.2.1.min.js"></script>
+    <script src="../js/bootstrap-3.3.7.min.js"></script>
+    <script src="../js/highlight.pack.js"></script>
+    
+    <base target="_top">
+    <script>
+      var base_url = '..';
+      var is_top_frame = false;
+        
+        var pageToc = [
+          {title: "Installation", url: "#_top", children: [
+          ]},
+        ];
+
+    </script>
+    <script src="../js/base.js"></script> 
+</head>
+
+<body>
+<script>
+if (is_top_frame) { $('body').addClass('wm-top-page'); }
+</script>
+
+
+
+<div class="container-fluid wm-page-content">
+  <a name="_top"></a>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../callbacks/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../callbacks/" class="btn btn-xs btn-link">
+        The pymata-cpx API
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../client/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../client/" class="btn btn-xs btn-link">
+        The pymata-cpx Client Library
+      </a>
+    </div>
+    
+  </div>
+
+    
+
+    <div style="text-align:left;color:#990033; font-family:times, serif; font-size:3.0em">The FirmataCPx Firmware</div>
+
+<p><br></p>
+<p>To monitor and control the Circuit Playground Express using
+the  pymata-cpx library, a special version of StandardFirmata, called
+<strong>FirmataCPx</strong>, must be installed on the Playground Express.</p>
+<p>FirmataCPx is a
+modified version of Circuit Playground Firmata that is supplied with the
+standard
+<a href="https://github.com/adafruit/Adafruit_CircuitPlayground">Adafruit Circuit Playground Express library.</a> This
+firmware is called FirmataCPx.</p>
+<p>FirmataCPx makes several improvements over the original Adafruit sketch,
+including advanced board discovery, a data transfer rate of 115200, and code simplification
+and reliability enhancements.</p>
+<h1 id="installation">Installation</h1>
+<p>Since the Circuit Playground Express utilizes a UF2 bootloader,
+installation is quick and straightforward. To install FirmataCPx on to the
+Express, first, click on
+<a href="https://github.com/MrYsLab/pymata-cpx/raw/master/FirmataCPxUF2/FirmataCPx.uf2">this link</a>
+to download FirmataCPx.uf2. </p>
+<p>Next, place the Circuit Playground Express in bootloader mode by plugging
+the Express into a USB port on your computer and double-clicking its
+reset button. All the neo-pixels should light green. </p>
+<p>Open up a file explorer tool, and you should see a USB drive called
+CPLAYBOOT. Using the file explorer, drag the FirmataCPx.uf2 file onto the CPLAYBOOT entry.
+ In a few seconds, FirmataCPx should be
+loaded on the Playground Express. The red LED should flash several times and then
+extinguish after a successful load. For more information about loading UF2 files onto the Express,
+please refer to
+<a href="https://learn.adafruit.com/adafruit-circuit-playground-express/downloading-and-flashing">this Adafruit page.</a>
+Even though this page addresses MakeCode, the procedure for flashing a
+.uf2 file is the same in all cases. </p>
+<p><br> <br></p>
+<p>Copyright (C) 2019 Alan Yorinks. All Rights Reserved.</p>
+
+  <br>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../callbacks/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../callbacks/" class="btn btn-xs btn-link">
+        The pymata-cpx API
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../client/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../client/" class="btn btn-xs btn-link">
+        The pymata-cpx Client Library
+      </a>
+    </div>
+    
+  </div>
+
+    <br>
+</div>
+
+<footer class="col-md-12 wm-page-content">
+  <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a> using <a href="https://github.com/gristlabs/mkdocs-windmill">Windmill</a> theme by Grist Labs.</p>
+</footer>
+
+</body>
+</html>
